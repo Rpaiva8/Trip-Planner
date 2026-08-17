@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Trip Planner</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Trips">
+<meta name="theme-color" content="#1B2A41">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231B2A41'/><text y='68' x='50' font-size='58' text-anchor='middle'>✈</text></svg>">
+<!-- fonts use built-in system faces so nothing needs to load from the internet -->
+<style>
+  :root{
+    --ink:#1B2A41; --paper:#F5F3EE; --paper-dim:#EAE6DC;
+    --brass:#C9A227; --stamp:#2F6F62; --danger:#B4443A;
+    --line:rgba(27,42,65,0.14);
+    --sea:#22354E; --land:#33506E;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;}
+  #app{max-width:540px;margin:0 auto;padding:18px 14px 70px;}
+  .screen{display:none;} .screen.active{display:block;}
+
+  .topnav{display:flex;gap:6px;margin-bottom:16px;}
+  .topnav div{flex:1;text-align:center;padding:9px;border-radius:9px;background:var(--paper-dim);cursor:pointer;font-family:-apple-system,'Avenir Next','Segoe UI',Roboto,sans-serif;font-weight:500;font-size:14px;user-select:none;}
+  .topnav div.on{background:var(--ink);color:var(--paper);}
+
+  .masthead h1{font-family:-apple-system,'Avenir Next','Segoe UI',Roboto,sans-serif;font-weight:700;font-size:28px;margin:0;letter-spacing:-0.01em;}
+  .masthead .meta{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--stamp);margin-top:4px;}
+  .quota{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;opacity:.5;margin:10px 0 14px;}
+
+  .trip-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;transition:transform .12s ease;}
+  .trip-card:active{transform:scale(0.99);}
+  .trip-card .where{font-family:-apple-system,'Avenir Next','Segoe UI',Roboto,sans-serif;font-weight:700;font-size:16px;}
+  .trip-card .when{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;color:var(--stamp);margin-top:3px;}
+  .trip-card .cost{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px;font-weight:700;color:var(--brass);flex-shrink:0;text-align:right;}
+  .trip-card .cd{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:9px;opacity:.5;display:block;margin-top:3px;font-weight:400;color:var(--ink);}
+
+  .pass{background:var(--ink);color:var(--paper);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;}
+  .pass::after{content:"";position:absolute;right:-30px;top:50%;width:56px;height:56px;background:var(--paper);border-radius:50%;transform:translateY(-50%);}
+  .back{background:none;border:none;color:var(--brass);font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;padding:0;margin-bottom:10px;}
+  .pass h2{font-family:-apple-system,'Avenir Next','Segoe UI',Roboto,sans-serif;font-weight:700;font-size:22px;margin:0;}
+  .pass .route{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;color:var(--brass);margin-top:5px;letter-spacing:0.05em;}
+
+  .tabs{display:flex;gap:4px;margin-top:14px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{flex-shrink:0;padding:8px 13px;border-radius:20px;font-family:-apple-system,'Avenir Next','Segoe UI',Roboto,sans-serif;font-weight:500;font-size:13px;background:var(--paper-dim);cursor:pointer;user-select:none;white-space:nowrap;}
+  .tab.active{background:var(--ink);color:var(--paper);}
+  .panel{display:none;padding-top:16px;} .panel.active{display:block;}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px;margin-bottom:10px;}
+  .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .card-title{font-family:-apple-system,'Avenir Next','Segoe UI',Roboto,sans-serif;font-weight:700;font-size:15px;}
+  .tagpill{display:inline-block;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;background:var(--stamp);color:#fff;padding:3px 7px;border-radius:4px;}
+  .tagpill.brass{background:var(--brass);color:var(--ink);}
+  .tagpill.out{background:var(--paper-dim);color:var(--ink);}
+  .field{margin-bottom:9px;}
+  .field label{display:block;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;opacity:.5;margin-bottom:3px;}
+  .field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:7px;padding:8px 9px;font-family:-apple-system,sans-serif;font-size:14px;color:var(--ink);background:var(--paper);outline:none;}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--stamp);}
+  .field textarea{resize:vertical;min-height:52px;}
+  .row2{display:flex;gap:8px;} .row2>*{flex:1;min-width:0;}
+  .leg{border-top:1px dashed var(--line);margin-top:6px;padding-top:10px;}
+  .leg-label{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--stamp);margin-bottom:7px;}
+
+  .btn{width:100%;padding:11px;border:none;border-radius:9px;font-family:-apple-system,'Avenir Next','Segoe UI',Roboto,sans-serif;font-weight:500;font-size:14px;cursor:pointer;margin-top:6px;}
+  .btn-primary{background:var(--ink);color:var(--paper);}
+  .btn-brass{background:var(--brass);color:var(--ink);font-weight:700;}
+  .btn-stamp{background:var(--stamp);color:#fff;}
+  .btn-ghost{background:transparent;border:1px dashed var(--line);opacity:.65;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .del{background:none;border:none;color:var(--danger);cursor:pointer;font-size:15px;padding:2px 5px;flex-shrink:0;line-height:1;}
+
+  .sum-hero{background:var(--ink);color:var(--paper);border-radius:12px;padding:18px;margin-bottom:12px;text-align:center;}
+  .sum-hero .cd{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass);}
+  .sum-hero .big{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:32px;font-weight:700;margin-top:4px;}
+  .sum-hero .sub{font-size:11px;opacity:.65;letter-spacing:.1em;text-transform:uppercase;margin-top:2px;}
+  .sum-grid{display:flex;gap:8px;margin-bottom:12px;}
+  .sum-stat{flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px;text-align:center;}
+  .sum-stat .n{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:19px;font-weight:700;color:var(--stamp);}
+  .sum-stat .l{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;opacity:.55;margin-top:3px;}
+  .sum-block{background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px;margin-bottom:10px;}
+  .sum-block h3{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--stamp);margin:0 0 10px;}
+  .sum-line{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:13px;}
+  .sum-line:first-of-type{border-top:none;}
+  .sum-line .k{opacity:.6;flex-shrink:0;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;}
+  .sum-line .v{text-align:right;min-width:0;word-break:break-word;}
+  .sum-item{padding:9px 0;border-top:1px solid var(--line);}
+  .sum-item:first-of-type{border-top:none;}
+  .sum-item .t{font-family:-apple-system,'Avenir Next','Segoe UI',Roboto,sans-serif;font-weight:700;font-size:14px;display:flex;justify-content:space-between;gap:8px;}
+  .sum-item .t em{font-style:normal;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px;color:var(--brass);flex-shrink:0;}
+  .sum-item .d{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;opacity:.6;margin-top:3px;line-height:1.5;}
+
+  .budget-hero{background:var(--ink);color:var(--paper);border-radius:11px;padding:16px;text-align:center;margin-bottom:12px;}
+  .budget-hero .num{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:30px;font-weight:700;color:var(--brass);}
+  .budget-hero .lbl{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;opacity:.65;margin-top:3px;}
+  .budget-hero .split{display:flex;justify-content:center;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(245,243,238,.15);font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;opacity:.8;flex-wrap:wrap;}
+  .bd-row{display:flex;justify-content:space-between;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px;padding:6px 0;border-top:1px solid var(--line);}
+  .bd-row:first-child{border-top:none;}
+  .bd-row.auto{opacity:.6;}
+  .exp-row{background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-bottom:7px;display:flex;align-items:center;gap:8px;}
+  .exp-row select{border:none;background:transparent;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:10px;color:var(--stamp);outline:none;width:88px;flex-shrink:0;text-transform:uppercase;letter-spacing:.05em;}
+  .exp-row input[type=text]{flex:1;border:none;outline:none;font-size:13px;background:transparent;color:var(--ink);min-width:0;font-family:-apple-system,sans-serif;}
+  .exp-row input[type=number]{width:74px;border:none;outline:none;text-align:right;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px;color:var(--ink);background:transparent;}
+
+  .sug-card{background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px;margin-bottom:10px;border-left:3px solid var(--brass);}
+  .sug-card h4{font-family:-apple-system,'Avenir Next','Segoe UI',Roboto,sans-serif;font-weight:700;font-size:15px;margin:0 0 5px;}
+  .sug-card .why{font-size:13px;line-height:1.45;margin-bottom:9px;}
+  .sug-meta{display:flex;flex-wrap:wrap;gap:6px;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:10px;}
+  .sug-meta span{background:var(--paper-dim);padding:4px 7px;border-radius:4px;}
+  .loader{text-align:center;padding:30px 10px;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px;color:var(--stamp);}
+  .loader::after{content:'';animation:dots 1.4s steps(4,end) infinite;}
+  @keyframes dots{0%{content:'';}25%{content:'.';}50%{content:'..';}75%{content:'...';}}
+  .notice{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:10px;line-height:1.5;opacity:.5;margin-top:14px;padding-top:10px;border-top:1px solid var(--line);}
+  .empty{text-align:center;padding:26px 12px;opacity:.45;font-size:13px;line-height:1.5;}
+  .status{text-align:center;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:10px;opacity:.32;margin-top:18px;}
+  .err{background:#fff;border:1px solid var(--danger);color:var(--danger);border-radius:9px;padding:11px;font-size:13px;margin-bottom:10px;}
+
+  /* ---- Map ---- */
+  .mapwrap{position:relative;width:100%;background:var(--sea);border-radius:12px;overflow:hidden;}
+  .mapwrap svg{display:block;width:100%;height:auto;}
+  .marker{cursor:pointer;transition:r .15s ease;}
+  .marker:hover{r:11;}
+  .mapop{
+    position:absolute;background:var(--paper);border-radius:9px;padding:10px 12px;
+    min-width:150px;max-width:210px;box-shadow:0 4px 18px rgba(0,0,0,.35);
+    transform:translate(-50%,calc(-100% - 14px));z-index:5;pointer-events:auto;
+  }
+  .mapop::after{content:'';position:absolute;left:50%;bottom:-6px;transform:translateX(-50%) rotate(45deg);width:12px;height:12px;background:var(--paper);}
+  .mapop .nm{font-family:-apple-system,'Avenir Next','Segoe UI',Roboto,sans-serif;font-weight:700;font-size:14px;line-height:1.25;}
+  .mapop .pl{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:10px;color:var(--stamp);margin-top:4px;}
+  .mapop .dt{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;margin-top:6px;}
+  .mapop .st{display:inline-block;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border-radius:3px;margin-top:7px;color:#fff;}
+  .mapop .go{display:block;width:100%;margin-top:9px;padding:6px;border:none;border-radius:6px;background:var(--ink);color:var(--paper);font-family:-apple-system,'Avenir Next','Segoe UI',sans-serif;font-size:12px;cursor:pointer;}
+  .mapop .x{position:absolute;top:4px;right:7px;background:none;border:none;font-size:14px;cursor:pointer;opacity:.4;line-height:1;padding:2px;}
+  .legend{display:flex;gap:14px;justify-content:center;margin-top:12px;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:10px;flex-wrap:wrap;}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+  .mapstats{display:flex;gap:8px;margin-top:12px;}
+  .mapstats>div{flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px;text-align:center;}
+  .mapstats .n{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:20px;font-weight:700;color:var(--stamp);}
+  .mapstats .l{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;opacity:.55;margin-top:3px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ MY TRIPS ============ -->
+  <div class="screen active" id="tripsScreen">
+    <div class="topnav">
+      <div class="on" onclick="showTripsView()">Trips</div>
+      <div onclick="showMapView()">Map</div>
+      <div onclick="showSettingsView()">Settings</div>
+    </div>
+    <div class="masthead">
+      <h1>My Trips</h1>
+      <div class="meta" id="tripsMeta">—</div>
+    </div>
+    <div class="quota" id="quotaLine"></div>
+    <div id="tripsList"></div>
+    <button class="btn btn-brass" id="newTripBtn" onclick="showNewTrip()">+ New trip</button>
+
+    <div id="newTripForm" style="display:none;margin-top:12px;">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:10px;">New trip</div>
+        <div class="field"><label>Trip name</label><input id="nt_name" placeholder="e.g. Highlands week"></div>
+        <div class="field"><label>Country</label><select id="nt_country" onchange="onCountryPick('nt')"></select></div>
+        <div class="field" id="nt_countryOtherWrap" style="display:none;"><label>Country name</label><input id="nt_countryOther" placeholder="Type country" oninput="onCityListRefresh('nt')"></div>
+        <div class="field"><label>City</label><select id="nt_city" onchange="onCityPick('nt')"></select></div>
+        <div class="field" id="nt_cityOtherWrap" style="display:none;"><label>City name</label><input id="nt_cityOther" placeholder="Type city"></div>
+        <div class="row2">
+          <div class="field"><label>Start date</label><input id="nt_start" type="date"></div>
+          <div class="field"><label>End date</label><input id="nt_end" type="date"></div>
+        </div>
+        <div class="field"><label>Travellers</label><input id="nt_travellers" type="number" min="1" value="1"></div>
+        <button class="btn btn-stamp" onclick="createTrip()">Create trip</button>
+        <button class="btn btn-ghost" onclick="hideNewTrip()">Cancel</button>
+      </div>
+    </div>
+    <div class="status" id="statusLine">loading</div>
+  </div>
+
+  <!-- ============ WORLD MAP ============ -->
+  <div class="screen" id="mapScreen">
+    <div class="topnav">
+      <div onclick="showTripsView()">Trips</div>
+      <div class="on" onclick="showMapView()">Map</div>
+      <div onclick="showSettingsView()">Settings</div>
+    </div>
+    <div class="masthead">
+      <h1>World Map</h1>
+      <div class="meta" id="mapMeta">—</div>
+    </div>
+    <div style="height:14px"></div>
+    <div class="mapwrap" id="mapWrap"></div>
+    <div class="legend">
+      <span><i style="background:#7FB069"></i>Visited</span>
+      <span><i style="background:#C9A227"></i>Upcoming</span>
+      <span><i style="background:#E8613C"></i>Happening now</span>
+    </div>
+    <div class="mapstats">
+      <div><div class="n" id="mCountries">0</div><div class="l">Countries</div></div>
+      <div><div class="n" id="mTrips">0</div><div class="l">Trips</div></div>
+      <div><div class="n" id="mCities">0</div><div class="l">Cities</div></div>
+    </div>
+    <div id="mapUnplotted"></div>
+  </div>
+
+  <!-- ============ SETTINGS ============ -->
+  <div class="screen" id="settingsScreen">
+    <div class="topnav">
+      <div onclick="showTripsView()">Trips</div>
+      <div onclick="showMapView()">Map</div>
+      <div class="on" onclick="showSettingsView()">Settings</div>
+    </div>
+    <div class="masthead">
+      <h1>Settings</h1>
+      <div class="meta" id="dataSize">—</div>
+    </div>
+    <div style="height:16px"></div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:4px;">Back up your trips</div>
+      <div style="font-size:13px;line-height:1.5;opacity:.7;margin-bottom:10px;">
+        Trips live only in this browser. Clearing browsing data wipes them. Export a copy before a big trip.
+      </div>
+      <button class="btn btn-stamp" onclick="exportData()">Export backup file</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">Restore from backup</button>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importData(this)">
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:4px;">Suggestions (optional)</div>
+      <div style="font-size:13px;line-height:1.5;opacity:.7;margin-bottom:10px;">
+        Explore and Near stay need an Anthropic API key to generate suggestions. Everything else works without one.
+        The key is stored on this device only and is never sent anywhere except Anthropic.
+      </div>
+      <div class="field">
+        <label>Anthropic API key</label>
+        <input id="setKey" type="password" placeholder="sk-ant-..." autocomplete="off">
+      </div>
+      <div id="keyState" style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;margin-bottom:8px;">—</div>
+      <button class="btn btn-primary" onclick="saveKey()">Save key</button>
+      <div class="notice" style="margin-top:12px;">
+        Get a key at console.anthropic.com — it is a separate account from your claude.ai subscription.
+        Usage is billed to you and each set of suggestions costs roughly a penny. Leave it blank to just use the planner.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:4px;">Danger zone</div>
+      <div style="font-size:13px;line-height:1.5;opacity:.7;margin-bottom:10px;">Removes every trip from this device.</div>
+      <button class="btn btn-ghost" style="color:var(--danger);border-color:var(--danger);opacity:.85" onclick="wipeData()">Delete all trips</button>
+    </div>
+
+    <div class="notice">
+      Add to your home screen for a full-screen app: Safari → Share → Add to Home Screen.
+      On Android: Chrome → menu → Add to Home screen.
+    </div>
+  </div>
+
+  <!-- ============ TRIP DETAIL ============ -->
+  <div class="screen" id="tripScreen">
+    <button class="back" onclick="goToTrips()">← My Trips</button>
+    <div class="pass">
+      <h2 id="tripHeadName">—</h2>
+      <div class="route" id="tripHeadRoute">—</div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-panel="p_sum">Summary</div>
+      <div class="tab" data-panel="p_plan">Plan</div>
+      <div class="tab" data-panel="p_travel">Travel</div>
+      <div class="tab" data-panel="p_stay">Stays</div>
+      <div class="tab" data-panel="p_budget">Budget</div>
+      <div class="tab" data-panel="p_explore">Explore</div>
+      <div class="tab" data-panel="p_nearby">Near stay</div>
+    </div>
+
+    <div class="panel active" id="p_sum"><div id="summaryArea"></div></div>
+
+    <div class="panel" id="p_plan">
+      <div class="card">
+        <div class="field"><label>Trip name</label><input id="ed_name" oninput="editTrip('name',this.value)"></div>
+        <div class="field"><label>Country</label><select id="ed_country" onchange="onCountryPick('ed')"></select></div>
+        <div class="field" id="ed_countryOtherWrap" style="display:none;"><label>Country name</label><input id="ed_countryOther" oninput="onCityListRefresh('ed');editTrip('country',this.value)"></div>
+        <div class="field"><label>City</label><select id="ed_city" onchange="onCityPick('ed')"></select></div>
+        <div class="field" id="ed_cityOtherWrap" style="display:none;"><label>City name</label><input id="ed_cityOther" oninput="editTrip('city',this.value)"></div>
+        <div class="row2">
+          <div class="field"><label>Start</label><input id="ed_start" type="date" oninput="editTrip('start',this.value)"></div>
+          <div class="field"><label>End</label><input id="ed_end" type="date" oninput="editTrip('end',this.value)"></div>
+        </div>
+        <div class="field"><label>Travellers on this trip</label><input id="ed_travellers" type="number" min="1" oninput="editTrip('travellers',this.value)"></div>
+        <div class="field"><label>Notes</label><textarea id="ed_notes" oninput="editTrip('notes',this.value)" placeholder="Anything to remember"></textarea></div>
+      </div>
+      <button class="btn btn-ghost" style="color:var(--danger);border-color:var(--danger);opacity:.8" onclick="deleteTrip()">Delete this trip</button>
+    </div>
+
+    <div class="panel" id="p_travel">
+      <div id="travelList"></div>
+      <button class="btn btn-stamp" onclick="addTravel()">+ Add booking</button>
+    </div>
+
+    <div class="panel" id="p_stay">
+      <div id="stayList"></div>
+      <button class="btn btn-stamp" onclick="addStay()">+ Add stay</button>
+    </div>
+
+    <div class="panel" id="p_budget">
+      <div class="budget-hero">
+        <div class="num" id="budTotal">£0</div>
+        <div class="lbl">Total trip cost</div>
+        <div class="split"><div id="budPerDay">£0 / day</div><div id="budDays">— days</div><div id="budPerPerson">£0 / person</div></div>
+      </div>
+      <div class="card">
+        <h3 style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--stamp);margin:0 0 8px;">Breakdown</h3>
+        <div id="budBreakdown"></div>
+      </div>
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin:14px 0 8px;">Other expenses</div>
+      <div id="expenseList"></div>
+      <button class="btn btn-stamp" onclick="addExpense()">+ Add expense</button>
+    </div>
+
+    <div class="panel" id="p_explore"><div id="exploreArea"></div></div>
+    <div class="panel" id="p_nearby"><div id="nearbyArea"></div></div>
+  </div>
+</div>
+
+<script>
+/* ================= reference data ================= */
+const PLACES = {
+"Scotland":["Edinburgh","Glasgow","Aberdeen","Dundee","Inverness","Stirling","Perth","St Andrews","Fort William","Oban","Isle of Skye (Portree)"],
+"England":["London","Manchester","Birmingham","Liverpool","Leeds","Bristol","Newcastle","Brighton","York","Bath","Oxford","Cambridge","Cornwall (Newquay)"],
+"Wales":["Cardiff","Swansea","Newport","Bangor","Aberystwyth","Conwy","Tenby"],
+"Northern Ireland":["Belfast","Derry","Newry","Armagh","Portrush"],
+"Ireland":["Dublin","Cork","Galway","Limerick","Killarney","Kilkenny"],
+"Portugal":["Lisbon","Porto","Faro","Funchal (Madeira)","Coimbra","Lagos","Braga","Albufeira"],
+"Spain":["Madrid","Barcelona","Seville","Valencia","Malaga","Granada","Bilbao","Palma","Alicante","Tenerife"],
+"France":["Paris","Nice","Lyon","Marseille","Bordeaux","Toulouse","Strasbourg","Cannes","Annecy"],
+"Italy":["Rome","Milan","Venice","Florence","Naples","Bologna","Turin","Palermo","Verona","Amalfi"],
+"Greece":["Athens","Thessaloniki","Santorini","Mykonos","Rhodes","Crete (Chania)","Corfu","Nafplio","Zakynthos"],
+"Albania":["Tirana","Sarandë","Durrës","Vlorë","Berat","Gjirokastër","Shkodër","Ksamil","Himarë"],
+"Montenegro":["Podgorica","Kotor","Budva","Tivat","Herceg Novi","Ulcinj","Perast"],
+"Croatia":["Zagreb","Split","Dubrovnik","Zadar","Hvar","Rovinj","Pula"],
+"Turkey":["Istanbul","Antalya","Cappadocia (Göreme)","Izmir","Bodrum","Fethiye","Ankara","Marmaris"],
+"Germany":["Berlin","Munich","Hamburg","Cologne","Frankfurt","Dresden","Düsseldorf","Nuremberg"],
+"Netherlands":["Amsterdam","Rotterdam","The Hague","Utrecht","Maastricht","Haarlem"],
+"Belgium":["Brussels","Bruges","Ghent","Antwerp","Leuven"],
+"Switzerland":["Zurich","Geneva","Lucerne","Interlaken","Bern","Zermatt","Lausanne"],
+"Austria":["Vienna","Salzburg","Innsbruck","Graz","Hallstatt"],
+"Czechia":["Prague","Brno","Český Krumlov","Karlovy Vary"],
+"Poland":["Warsaw","Kraków","Gdańsk","Wrocław","Poznań","Zakopane"],
+"Hungary":["Budapest","Debrecen","Eger","Pécs"],
+"Norway":["Oslo","Bergen","Tromsø","Stavanger","Trondheim","Ålesund"],
+"Sweden":["Stockholm","Gothenburg","Malmö","Kiruna","Uppsala"],
+"Denmark":["Copenhagen","Aarhus","Odense","Skagen"],
+"Finland":["Helsinki","Rovaniemi","Turku","Tampere"],
+"Iceland":["Reykjavík","Akureyri","Vík","Höfn"],
+"Brazil":["São Paulo","Rio de Janeiro","Salvador","Brasília","Florianópolis","Recife","Fortaleza","Belo Horizonte","Curitiba","Manaus","Porto Alegre","Natal"],
+"United States":["New York","Los Angeles","San Francisco","Chicago","Miami","Las Vegas","Boston","Seattle","New Orleans","Washington DC","Orlando","San Diego"],
+"Canada":["Toronto","Vancouver","Montreal","Quebec City","Calgary","Banff","Ottawa"],
+"Mexico":["Mexico City","Cancún","Tulum","Oaxaca","Guadalajara","Playa del Carmen","Puerto Vallarta"],
+"Japan":["Tokyo","Kyoto","Osaka","Hiroshima","Sapporo","Nara","Fukuoka","Kanazawa"],
+"Thailand":["Bangkok","Chiang Mai","Phuket","Krabi","Koh Samui","Pattaya"],
+"Vietnam":["Hanoi","Ho Chi Minh City","Da Nang","Hoi An","Ha Long","Hue"],
+"Indonesia":["Bali (Denpasar)","Jakarta","Ubud","Yogyakarta","Lombok"],
+"Singapore":["Singapore"],
+"United Arab Emirates":["Dubai","Abu Dhabi","Sharjah","Ras Al Khaimah"],
+"Morocco":["Marrakesh","Casablanca","Fez","Chefchaouen","Essaouira","Tangier","Agadir"],
+"Egypt":["Cairo","Luxor","Aswan","Hurghada","Sharm El Sheikh","Alexandria"],
+"South Africa":["Cape Town","Johannesburg","Durban","Stellenbosch","Port Elizabeth"],
+"Australia":["Sydney","Melbourne","Brisbane","Perth","Cairns","Adelaide","Gold Coast"],
+"New Zealand":["Auckland","Queenstown","Wellington","Christchurch","Rotorua"],
+"India":["Delhi","Mumbai","Jaipur","Goa","Bengaluru","Agra","Kochi (Kerala)","Udaipur"],
+"Argentina":["Buenos Aires","Mendoza","Bariloche","Córdoba","Salta"],
+"Peru":["Lima","Cusco","Arequipa","Puno"],
+"Chile":["Santiago","Valparaíso","Puerto Varas","Atacama (San Pedro)"],
+"Colombia":["Bogotá","Medellín","Cartagena","Cali","Santa Marta"],
+"Malta":["Valletta","Sliema","Gozo","St Julian's"],
+"Cyprus":["Nicosia","Limassol","Paphos","Ayia Napa","Larnaca"]
+};
+const COORDS = {
+"Scotland":[56.5,-4.2],"England":[52.5,-1.5],"Wales":[52.3,-3.7],"Northern Ireland":[54.7,-6.7],
+"Ireland":[53.2,-8.0],"Portugal":[39.5,-8.0],"Spain":[40.2,-3.7],"France":[46.5,2.4],
+"Italy":[42.8,12.5],"Greece":[39.0,22.0],"Albania":[41.2,20.0],"Montenegro":[42.7,19.3],
+"Croatia":[45.1,15.5],"Turkey":[39.0,35.0],"Germany":[51.1,10.4],"Netherlands":[52.2,5.3],
+"Belgium":[50.6,4.5],"Switzerland":[46.8,8.2],"Austria":[47.6,14.1],"Czechia":[49.8,15.5],
+"Poland":[52.0,19.4],"Hungary":[47.2,19.4],"Norway":[61.0,9.0],"Sweden":[62.0,15.0],
+"Denmark":[56.0,10.0],"Finland":[64.0,26.0],"Iceland":[64.9,-19.0],"Brazil":[-10.0,-52.0],
+"United States":[39.0,-98.0],"Canada":[58.0,-100.0],"Mexico":[23.0,-102.0],"Japan":[36.5,138.0],
+"Thailand":[15.0,101.0],"Vietnam":[16.0,107.0],"Indonesia":[-2.5,118.0],"Singapore":[1.35,103.8],
+"United Arab Emirates":[24.0,54.0],"Morocco":[31.8,-7.0],"Egypt":[26.8,30.0],"South Africa":[-29.0,25.0],
+"Australia":[-25.0,134.0],"New Zealand":[-41.5,172.5],"India":[22.0,79.0],"Argentina":[-35.0,-65.0],
+"Peru":[-10.0,-76.0],"Chile":[-35.0,-71.0],"Colombia":[4.0,-73.0],"Malta":[35.9,14.4],"Cyprus":[35.0,33.0]
+};
+/* Coarse world outlines as [lon,lat] rings — plotted equirectangular */
+const LAND = [
+[[10,37],[20,32],[25,32],[32,31],[35,24],[38,18],[43,12],[51,12],[43,3],[41,-2],[40,-10],[35,-19],[33,-26],[27,-34],[20,-35],[18,-30],[14,-22],[12,-16],[9,-1],[9,4],[3,6],[-5,5],[-13,9],[-17,15],[-16,22],[-10,29],[-6,35],[0,36]],
+[[-9,43],[-2,48],[2,51],[8,54],[10,58],[5,59],[10,64],[15,69],[22,71],[30,71],[40,68],[55,70],[70,73],[80,74],[95,78],[110,76],[125,73],[140,73],[160,70],[170,69],[180,65],[175,62],[165,60],[160,55],[155,50],[143,45],[135,43],[130,38],[122,39],[120,35],[122,30],[118,24],[110,21],[105,10],[104,1],[100,6],[98,12],[95,16],[90,22],[88,21],[80,15],[77,8],[73,15],[70,22],[65,25],[60,25],[57,25],[56,26],[54,17],[48,13],[43,13],[39,21],[35,28],[34,31],[36,36],[30,40],[27,40],[24,40],[20,42],[18,42],[13,45],[12,44],[15,40],[16,38],[12,38],[10,43],[7,44],[3,43],[-1,39],[-6,37],[-9,37]],
+[[-168,66],[-160,71],[-150,70],[-135,69],[-125,70],[-115,73],[-100,70],[-95,73],[-85,73],[-80,78],[-70,82],[-60,76],[-55,70],[-65,62],[-78,62],[-80,55],[-70,50],[-60,47],[-66,44],[-70,42],[-74,40],[-76,35],[-81,31],[-80,25],[-85,30],[-90,29],[-95,29],[-97,26],[-95,18],[-92,15],[-87,13],[-83,9],[-79,9],[-83,15],[-90,20],[-97,22],[-105,20],[-110,24],[-114,30],[-117,33],[-122,37],[-124,42],[-124,48],[-130,54],[-140,60],[-150,60],[-155,58],[-165,60]],
+[[-79,9],[-72,12],[-64,11],[-60,8],[-52,5],[-50,0],[-44,-2],[-38,-5],[-35,-8],[-39,-13],[-40,-20],[-48,-25],[-53,-33],[-57,-38],[-62,-40],[-65,-45],[-68,-50],[-69,-55],[-74,-52],[-73,-45],[-73,-37],[-71,-30],[-70,-20],[-71,-15],[-77,-12],[-81,-5],[-80,0],[-77,7]],
+[[113,-22],[114,-26],[116,-32],[121,-34],[129,-32],[135,-35],[138,-35],[141,-38],[146,-39],[150,-37],[153,-28],[153,-25],[146,-19],[142,-11],[136,-12],[130,-11],[125,-14],[122,-18]],
+[[-45,60],[-30,68],[-22,70],[-20,76],[-30,83],[-45,83],[-58,82],[-70,78],[-55,68],[-50,62]],
+[[-5,50],[-3,51],[1,51],[0,53],[-1,54],[-3,58],[-5,58],[-6,55],[-5,53]],
+[[-10,52],[-6,52],[-6,55],[-8,55],[-10,54]],
+[[-24,65],[-14,65],[-13,66],[-18,66.5],[-22,66]],
+[[130,31],[135,34],[140,36],[142,42],[145,44],[141,45],[139,38],[135,35],[132,34]],
+[[43,-12],[50,-15],[50,-25],[45,-25],[43,-18]],
+[[172,-34],[178,-38],[177,-40],[174,-41],[171,-44],[167,-46],[166,-45],[170,-43],[173,-40]],
+[[95,5],[105,-6],[115,-9],[125,-9],[130,-8],[120,-4],[110,-3],[100,0]],
+[[120,18],[124,18],[126,13],[126,7],[122,6],[120,12]],
+[[80,10],[82,8],[81,6],[80,7]],
+[[-85,22],[-78,21],[-74,20],[-77,23],[-84,23]]
+];
+const OTHER = "Other — type it in";
+const CATEGORIES = ['Flights','Transport','Accommodation','Food','Activities','Shopping','Other'];
+const MAX_TRIPS_PER_YEAR = 12;
+const MW = 1000, MH = 500;
+const DB_KEY = 'tripplanner_offline_v1';
+const KEY_KEY = 'tripplanner_apikey';
+let apiKey = '';
+
+let store = { trips: [] };
+let currentTripId = null, saveTimer = null;
+
+const $ = id => document.getElementById(id);
+const uid = () => Math.random().toString(36).slice(2,10);
+const esc = s => !s ? '' : String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const money = n => '£' + (Number(n)||0).toLocaleString(undefined,{maximumFractionDigits:0});
+const num = v => Number(v)||0;
+function currentTrip(){ return store.trips.find(t=>t.id===currentTripId); }
+
+/* ================= storage ================= */
+async function loadStore(){
+  try{ const r=localStorage.getItem(DB_KEY); if(r) store=JSON.parse(r); }catch(e){}
+  try{ apiKey = localStorage.getItem(KEY_KEY) || ''; }catch(e){ apiKey=''; }
+  if(!store.trips) store.trips=[];
+  buildCountrySelect('nt'); onCountryPick('nt');
+  renderTrips(); setStatus('saved on this device');
+}
+function save(){
+  setStatus('saving');
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    try{ localStorage.setItem(DB_KEY,JSON.stringify(store)); setStatus('saved on this device'); }
+    catch(e){ setStatus('save failed — device storage full?'); }
+  },450);
+}
+function setStatus(t){ const el=$('statusLine'); if(el) el.textContent=t; }
+
+/* ================= dropdowns ================= */
+function buildCountrySelect(pfx, selected){
+  const sel=$(pfx+'_country'), countries=Object.keys(PLACES).sort();
+  const known=countries.includes(selected);
+  sel.innerHTML='<option value="">Select country…</option>'+
+    countries.map(c=>`<option ${selected===c?'selected':''}>${c}</option>`).join('')+
+    `<option value="__other" ${selected&&!known?'selected':''}>${OTHER}</option>`;
+  const isOther=selected&&!known;
+  $(pfx+'_countryOtherWrap').style.display=isOther?'block':'none';
+  if(isOther) $(pfx+'_countryOther').value=selected;
+}
+function countryValue(pfx){ const v=$(pfx+'_country').value; return v==='__other'?$(pfx+'_countryOther').value.trim():v; }
+function cityValue(pfx){ const v=$(pfx+'_city').value; return v==='__other'?$(pfx+'_cityOther').value.trim():v; }
+function onCountryPick(pfx){
+  const isOther=$(pfx+'_country').value==='__other';
+  $(pfx+'_countryOtherWrap').style.display=isOther?'block':'none';
+  if(!isOther) $(pfx+'_countryOther').value='';
+  onCityListRefresh(pfx);
+  if(pfx==='ed'){ editTrip('country',countryValue('ed')); editTrip('city',cityValue('ed')); }
+}
+function onCityListRefresh(pfx, selectedCity){
+  const country=countryValue(pfx), list=PLACES[country]||[], sel=$(pfx+'_city');
+  const known=list.includes(selectedCity);
+  if(list.length){
+    sel.innerHTML='<option value="">Select city…</option>'+
+      list.map(c=>`<option ${selectedCity===c?'selected':''}>${c}</option>`).join('')+
+      `<option value="__other" ${selectedCity&&!known?'selected':''}>${OTHER}</option>`;
+  } else { sel.innerHTML=`<option value="__other" selected>${OTHER}</option>`; }
+  const isOther=sel.value==='__other';
+  $(pfx+'_cityOtherWrap').style.display=isOther?'block':'none';
+  if(isOther&&selectedCity) $(pfx+'_cityOther').value=selectedCity;
+}
+function onCityPick(pfx){
+  const isOther=$(pfx+'_city').value==='__other';
+  $(pfx+'_cityOtherWrap').style.display=isOther?'block':'none';
+  if(!isOther) $(pfx+'_cityOther').value='';
+  if(pfx==='ed') editTrip('city',cityValue('ed'));
+}
+
+/* ================= trips list ================= */
+function tripsThisYear(){
+  const y=new Date().getFullYear();
+  return store.trips.filter(t=>t.start&&new Date(t.start).getFullYear()===y).length;
+}
+function tripStatus(t){
+  if(!t.start) return 'planned';
+  const today=new Date(); today.setHours(0,0,0,0);
+  const s=new Date(t.start+'T00:00'), e=new Date((t.end||t.start)+'T00:00');
+  if(today<s) return 'upcoming';
+  if(today<=e) return 'now';
+  return 'visited';
+}
+function statusColour(s){ return s==='visited'?'#7FB069':s==='now'?'#E8613C':'#C9A227'; }
+function countdown(t){
+  if(!t.start) return '';
+  const today=new Date(); today.setHours(0,0,0,0);
+  const s=new Date(t.start+'T00:00'), e=new Date((t.end||t.start)+'T00:00');
+  if(today<s){ const d=Math.round((s-today)/86400000); return d===0?'starts today':`in ${d} day${d===1?'':'s'}`; }
+  if(today<=e) return 'happening now';
+  return 'past trip';
+}
+function renderTrips(){
+  const used=tripsThisYear(), left=MAX_TRIPS_PER_YEAR-used;
+  $('tripsMeta').textContent=store.trips.length+(store.trips.length===1?' trip saved':' trips saved');
+  $('quotaLine').textContent=`${used} of ${MAX_TRIPS_PER_YEAR} trips used this year · ${left} remaining`;
+  const btn=$('newTripBtn');
+  btn.disabled=left<=0;
+  btn.textContent=left<=0?'Yearly limit reached (12)':'+ New trip';
+  const el=$('tripsList');
+  if(!store.trips.length){ el.innerHTML='<div class="empty">No trips yet.<br>Add your first one below.</div>'; return; }
+  const sorted=[...store.trips].sort((a,b)=>(a.start||'9999').localeCompare(b.start||'9999'));
+  el.innerHTML=sorted.map(t=>{
+    const place=[t.city,t.country].filter(Boolean).join(', ')||'Destination not set';
+    const ppl=num(t.travellers)>1?` · ${t.travellers} travellers`:'';
+    return `<div class="trip-card" onclick="openTrip('${t.id}')">
+      <div style="min-width:0">
+        <div class="where">${esc(t.name||place)}</div>
+        <div class="when">${esc(place)} · ${fmtRange(t.start,t.end)}${ppl}</div>
+      </div>
+      <div class="cost">${money(grandTotal(t))}<span class="cd">${countdown(t)}</span></div>
+    </div>`;
+  }).join('');
+}
+function fmtRange(a,b){
+  if(!a&&!b) return 'dates not set';
+  const f=d=>d?new Date(d+'T00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'?';
+  return f(a)+' – '+f(b);
+}
+function showNewTrip(){ $('newTripForm').style.display='block'; $('newTripBtn').style.display='none'; }
+function hideNewTrip(){ $('newTripForm').style.display='none'; $('newTripBtn').style.display='block'; }
+function createTrip(){
+  const t={id:uid(),name:$('nt_name').value.trim(),country:countryValue('nt'),city:cityValue('nt'),
+    start:$('nt_start').value,end:$('nt_end').value,travellers:num($('nt_travellers').value)||1,
+    notes:'',travel:[],stays:[],expenses:[],exploreCache:null,nearbyCache:null};
+  if(!t.name&&!t.city){ alert('Add a trip name or pick a city first.'); return; }
+  store.trips.push(t);
+  ['nt_name','nt_start','nt_end','nt_countryOther','nt_cityOther'].forEach(i=>$(i).value='');
+  $('nt_travellers').value=1;
+  buildCountrySelect('nt'); onCountryPick('nt');
+  hideNewTrip(); save(); renderTrips(); openTrip(t.id);
+}
+
+/* ================= navigation ================= */
+function hideAll(){ ['tripsScreen','mapScreen','settingsScreen','tripScreen'].forEach(i=>$(i).classList.remove('active')); }
+function showTripsView(){ hideAll(); $('tripsScreen').classList.add('active'); window.scrollTo(0,0); renderTrips(); }
+function showMapView(){ hideAll(); $('mapScreen').classList.add('active'); window.scrollTo(0,0); renderMap(); }
+function showSettingsView(){ hideAll(); $('settingsScreen').classList.add('active'); window.scrollTo(0,0); renderSettings(); }
+function openTrip(id){
+  currentTripId=id;
+  hideAll(); $('tripScreen').classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector('.tab[data-panel="p_sum"]').classList.add('active');
+  $('p_sum').classList.add('active');
+  window.scrollTo(0,0); renderTripDetail();
+}
+function goToTrips(){ currentTripId=null; showTripsView(); }
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active'); $(tab.dataset.panel).classList.add('active');
+  });
+});
+function renderTripDetail(){
+  const t=currentTrip(); if(!t) return;
+  const place=[t.city,t.country].filter(Boolean).join(', ')||'Destination not set';
+  $('tripHeadName').textContent=t.name||place;
+  $('tripHeadRoute').textContent=place.toUpperCase()+' · '+fmtRange(t.start,t.end);
+  $('ed_name').value=t.name||''; $('ed_start').value=t.start||'';
+  $('ed_end').value=t.end||''; $('ed_notes').value=t.notes||'';
+  $('ed_travellers').value=t.travellers||1;
+  buildCountrySelect('ed',t.country); onCityListRefresh('ed',t.city);
+  renderSummary(); renderTravel(); renderStays(); renderBudget(); renderExplore(); renderNearby();
+}
+function editTrip(field,val){
+  const t=currentTrip(); if(!t) return;
+  t[field]= field==='travellers' ? Math.max(1,num(val)||1) : val;
+  const place=[t.city,t.country].filter(Boolean).join(', ')||'Destination not set';
+  $('tripHeadName').textContent=t.name||place;
+  $('tripHeadRoute').textContent=place.toUpperCase()+' · '+fmtRange(t.start,t.end);
+  save(); renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
+}
+function deleteTrip(){
+  if(!confirm('Delete this trip and everything in it?')) return;
+  store.trips=store.trips.filter(t=>t.id!==currentTripId);
+  save(); goToTrips();
+}
+
+/* ================= totals ================= */
+function travelTotal(t){ return (t.travel||[]).reduce((s,b)=>s+num(b.cost),0); }
+function stayTotal(t){ return (t.stays||[]).reduce((s,x)=>s+num(x.cost),0); }
+function expenseTotal(t){ return (t.expenses||[]).reduce((s,e)=>s+num(e.amount),0); }
+function grandTotal(t){ return travelTotal(t)+stayTotal(t)+expenseTotal(t); }
+function tripDays(t){
+  if(!t.start||!t.end) return 0;
+  const d=(new Date(t.end)-new Date(t.start))/86400000;
+  return d>=0?d+1:0;
+}
+function travellers(t){ return Math.max(1,num(t.travellers)||1); }
+
+/* ================= summary ================= */
+function renderSummary(){
+  const t=currentTrip(); const el=$('summaryArea');
+  const days=tripDays(t), total=grandTotal(t), ppl=travellers(t);
+  const place=[t.city,t.country].filter(Boolean).join(', ')||'Not set';
+  const stay=(t.stays||[])[0];
+
+  let html=`<div class="sum-hero">
+      <div class="cd">${countdown(t)||'dates not set'}</div>
+      <div class="big">${money(total)}</div>
+      <div class="sub">total for ${ppl} traveller${ppl===1?'':'s'}</div>
+    </div>
+    <div class="sum-grid">
+      <div class="sum-stat"><div class="n">${days||'—'}</div><div class="l">Days</div></div>
+      <div class="sum-stat"><div class="n">${ppl}</div><div class="l">Travellers</div></div>
+      <div class="sum-stat"><div class="n">${money(total/ppl)}</div><div class="l">Per person</div></div>
+      <div class="sum-stat"><div class="n">${days?money(total/days):'—'}</div><div class="l">Per day</div></div>
+    </div>`;
+
+  html+=`<div class="sum-block"><h3>Trip</h3>
+    <div class="sum-line"><span class="k">Destination</span><span class="v">${esc(place)}</span></div>
+    <div class="sum-line"><span class="k">Dates</span><span class="v">${fmtRange(t.start,t.end)}</span></div>
+    <div class="sum-line"><span class="k">Travellers</span><span class="v">${ppl}</span></div>
+    ${t.notes?`<div class="sum-line"><span class="k">Notes</span><span class="v">${esc(t.notes)}</span></div>`:''}
+  </div>`;
+
+  if((t.travel||[]).length){
+    html+=`<div class="sum-block"><h3>Travel</h3>`+t.travel.map(b=>{
+      let d=`${esc(b.from||'?')} → ${esc(b.to||'?')}${b.date?' · '+esc(b.date):''}${b.time?' '+esc(b.time):''}`;
+      if(b.journey==='Return'){
+        d+=`<br>${esc(b.to||'?')} → ${esc(b.from||'?')}${b.retDate?' · '+esc(b.retDate):''}${b.retTime?' '+esc(b.retTime):''}`;
+      }
+      if(b.ref) d+='<br>Ref: '+esc(b.ref);
+      if(b.retRef) d+=' · Return ref: '+esc(b.retRef);
+      return `<div class="sum-item">
+        <div class="t"><span>${esc(b.mode)} · ${esc(b.journey||'One way')}${b.carrier?' · '+esc(b.carrier):''}</span><em>${b.cost?money(b.cost):''}</em></div>
+        <div class="d">${d}</div></div>`;
+    }).join('')+`</div>`;
+  }
+
+  if((t.stays||[]).length){
+    html+=`<div class="sum-block"><h3>Stays</h3>`+t.stays.map(s=>`
+      <div class="sum-item">
+        <div class="t"><span>${esc(s.name||s.type)}</span><em>${s.cost?money(s.cost):''}</em></div>
+        <div class="d">${esc(s.type)}${s.postcode?' · '+esc(s.postcode):''}
+        ${s.address?'<br>'+esc(s.address):''}
+        ${(s.checkin||s.checkout)?'<br>In: '+esc(s.checkin||'?')+' · Out: '+esc(s.checkout||'?'):''}
+        ${s.ref?'<br>Ref: '+esc(s.ref):''}</div>
+      </div>`).join('')+`</div>`;
+  }
+
+  html+=`<div class="sum-block"><h3>Cost breakdown</h3>
+    <div class="sum-line"><span class="k">Travel tickets</span><span class="v">${money(travelTotal(t))}</span></div>
+    <div class="sum-line"><span class="k">Accommodation</span><span class="v">${money(stayTotal(t))}</span></div>
+    <div class="sum-line"><span class="k">Other expenses</span><span class="v">${money(expenseTotal(t))}</span></div>
+    <div class="sum-line" style="font-weight:600"><span class="k">Total</span><span class="v">${money(total)}</span></div>
+    ${ppl>1?`<div class="sum-line" style="color:var(--stamp)"><span class="k">Each</span><span class="v">${money(total/ppl)}</span></div>`:''}
+  </div>`;
+
+  if(!stay) html+=`<div class="notice">Add a stay with a postcode to unlock the "Near stay" suggestions.</div>`;
+  el.innerHTML=html;
+}
+
+/* ================= travel ================= */
+function addTravel(){
+  currentTrip().travel.push({id:uid(),mode:'Flight',journey:'Return',carrier:'',ref:'',from:'',to:'',
+    date:'',time:'',retDate:'',retTime:'',retRef:'',cost:'',notes:''});
+  save(); renderTravel(); renderSummary(); renderBudget();
+}
+function updTravel(id,f,v){
+  const b=currentTrip().travel.find(x=>x.id===id); b[f]=v; save();
+  renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
+  if(f==='mode'||f==='journey') renderTravel();
+}
+function delTravel(id){ const t=currentTrip(); t.travel=t.travel.filter(x=>x.id!==id); save(); renderTravel(); renderSummary(); renderBudget(); }
+function renderTravel(){
+  const t=currentTrip(); const el=$('travelList'); const ppl=travellers(t);
+  if(!t.travel.length){ el.innerHTML='<div class="empty">No bookings yet.<br>Add flights, trains or buses.</div>'; return; }
+  el.innerHTML=t.travel.map(b=>{
+    const isReturn=b.journey==='Return';
+    const per=num(b.cost)&&ppl>1?`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.55;margin-top:-4px;margin-bottom:8px;">${money(num(b.cost)/ppl)} per person · covers ${ppl} travellers</div>`:'';
+    return `<div class="card">
+      <div class="card-head">
+        <div style="flex:1;display:flex;gap:5px;flex-wrap:wrap">
+          <span class="tagpill">${esc(b.mode)}</span>
+          <span class="tagpill ${isReturn?'brass':'out'}">${isReturn?'Return':'One way'}</span>
+        </div>
+        <button class="del" onclick="delTravel('${b.id}')">✕</button>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Type</label><select onchange="updTravel('${b.id}','mode',this.value)">
+          ${['Flight','Train','Bus','Ferry','Car hire'].map(m=>`<option ${b.mode===m?'selected':''}>${m}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>Journey</label><select onchange="updTravel('${b.id}','journey',this.value)">
+          ${['One way','Return'].map(m=>`<option ${b.journey===m?'selected':''}>${m}</option>`).join('')}
+        </select></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Carrier</label><input value="${esc(b.carrier)}" placeholder="e.g. LNER" onchange="updTravel('${b.id}','carrier',this.value)"></div>
+        <div class="field"><label>Total cost (£)</label><input type="number" value="${esc(b.cost)}" placeholder="0" oninput="updTravel('${b.id}','cost',this.value)"></div>
+      </div>
+      ${per}
+      <div class="leg">
+        <div class="leg-label">Outbound</div>
+        <div class="row2">
+          <div class="field"><label>From</label><input value="${esc(b.from)}" placeholder="London KGX" onchange="updTravel('${b.id}','from',this.value)"></div>
+          <div class="field"><label>To</label><input value="${esc(b.to)}" placeholder="Edinburgh" onchange="updTravel('${b.id}','to',this.value)"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Date</label><input type="date" value="${esc(b.date)}" onchange="updTravel('${b.id}','date',this.value)"></div>
+          <div class="field"><label>Time</label><input type="time" value="${esc(b.time)}" onchange="updTravel('${b.id}','time',this.value)"></div>
+        </div>
+        <div class="field"><label>Reservation ref</label><input value="${esc(b.ref)}" placeholder="ABC123" onchange="updTravel('${b.id}','ref',this.value)"></div>
+      </div>
+      ${isReturn?`
+      <div class="leg">
+        <div class="leg-label">Return · ${esc(b.to||'?')} → ${esc(b.from||'?')}</div>
+        <div class="row2">
+          <div class="field"><label>Date</label><input type="date" value="${esc(b.retDate)}" onchange="updTravel('${b.id}','retDate',this.value)"></div>
+          <div class="field"><label>Time</label><input type="time" value="${esc(b.retTime)}" onchange="updTravel('${b.id}','retTime',this.value)"></div>
+        </div>
+        <div class="field"><label>Return ref (if different)</label><input value="${esc(b.retRef)}" placeholder="Leave blank if same" onchange="updTravel('${b.id}','retRef',this.value)"></div>
+      </div>`:''}
+      <div class="field" style="margin-top:9px"><label>Notes</label><textarea placeholder="Terminal, seat, baggage" onchange="updTravel('${b.id}','notes',this.value)">${esc(b.notes)}</textarea></div>
+    </div>`;
+  }).join('');
+}
+
+/* ================= stays ================= */
+function addStay(){
+  currentTrip().stays.push({id:uid(),type:'Hotel',name:'',address:'',postcode:'',ref:'',checkin:'',checkout:'',cost:'',notes:''});
+  save(); renderStays(); renderSummary(); renderBudget(); renderNearby();
+}
+function updStay(id,f,v){
+  const s=currentTrip().stays.find(x=>x.id===id); s[f]=v; save();
+  renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
+  if(f==='type') renderStays();
+  if(f==='postcode'||f==='name'||f==='address') renderNearby();
+}
+function delStay(id){ const t=currentTrip(); t.stays=t.stays.filter(x=>x.id!==id); save(); renderStays(); renderSummary(); renderBudget(); renderNearby(); }
+function renderStays(){
+  const t=currentTrip(); const el=$('stayList'); const ppl=travellers(t);
+  if(!t.stays.length){ el.innerHTML='<div class="empty">No stays yet.<br>Add your hotel, hostel or Airbnb.</div>'; return; }
+  el.innerHTML=t.stays.map(s=>{
+    const per=num(s.cost)&&ppl>1?`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.55;margin-bottom:8px;">${money(num(s.cost)/ppl)} per person</div>`:'';
+    return `<div class="card">
+      <div class="card-head"><div style="flex:1"><span class="tagpill brass">${esc(s.type)}</span></div>
+        <button class="del" onclick="delStay('${s.id}')">✕</button></div>
+      <div class="row2">
+        <div class="field"><label>Type</label><select onchange="updStay('${s.id}','type',this.value)">
+          ${['Hotel','Hostel','Airbnb','Guesthouse','Friends/family'].map(m=>`<option ${s.type===m?'selected':''}>${m}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>Booking ref</label><input value="${esc(s.ref)}" onchange="updStay('${s.id}','ref',this.value)"></div>
+      </div>
+      <div class="field"><label>Name</label><input value="${esc(s.name)}" placeholder="Hotel name" onchange="updStay('${s.id}','name',this.value)"></div>
+      <div class="field"><label>Address</label><textarea placeholder="Street, district" onchange="updStay('${s.id}','address',this.value)">${esc(s.address)}</textarea></div>
+      <div class="row2">
+        <div class="field"><label>Postcode / zip ★</label><input value="${esc(s.postcode)}" placeholder="EH1 1YZ" onchange="updStay('${s.id}','postcode',this.value)"></div>
+        <div class="field"><label>Total cost (£)</label><input type="number" value="${esc(s.cost)}" placeholder="0" oninput="updStay('${s.id}','cost',this.value)"></div>
+      </div>
+      ${per}
+      <div class="row2">
+        <div class="field"><label>Check in</label><input type="date" value="${esc(s.checkin)}" onchange="updStay('${s.id}','checkin',this.value)"></div>
+        <div class="field"><label>Check out</label><input type="date" value="${esc(s.checkout)}" onchange="updStay('${s.id}','checkout',this.value)"></div>
+      </div>
+      <div class="field"><label>Check-in instructions</label><textarea placeholder="From 15:00, key box code, contact number" onchange="updStay('${s.id}','notes',this.value)">${esc(s.notes)}</textarea></div>
+    </div>`;
+  }).join('')+`<div class="notice">★ The postcode drives the "Near stay" suggestions — the more exact it is, the better the results.</div>`;
+}
+
+/* ================= budget ================= */
+function addExpense(){ currentTrip().expenses.push({id:uid(),cat:'Food',label:'',amount:''}); save(); renderBudget(); renderSummary(); }
+function updExp(id,f,v){
+  const e=currentTrip().expenses.find(x=>x.id===id); e[f]=v; save();
+  if(f==='amount'){ renderBudgetTotals(); renderBudgetBreakdown(); renderSummary(); }
+}
+function delExp(id){ const t=currentTrip(); t.expenses=t.expenses.filter(x=>x.id!==id); save(); renderBudget(); renderSummary(); }
+function renderBudgetTotals(){
+  const t=currentTrip(); if(!t) return;
+  const total=grandTotal(t), days=tripDays(t), ppl=travellers(t);
+  $('budTotal').textContent=money(total);
+  $('budDays').textContent=days?days+(days===1?' day':' days'):'dates not set';
+  $('budPerDay').textContent=days?money(total/days)+' / day':'— / day';
+  $('budPerPerson').textContent=money(total/ppl)+' / person';
+}
+function renderBudgetBreakdown(){
+  const t=currentTrip(); if(!t) return;
+  const byCat={};
+  (t.expenses||[]).forEach(e=>{ byCat[e.cat]=(byCat[e.cat]||0)+num(e.amount); });
+  let html=`<div class="bd-row auto"><span>Travel tickets (auto)</span><span>${money(travelTotal(t))}</span></div>
+            <div class="bd-row auto"><span>Accommodation (auto)</span><span>${money(stayTotal(t))}</span></div>`;
+  Object.keys(byCat).forEach(c=>{ if(byCat[c]) html+=`<div class="bd-row"><span>${esc(c)}</span><span>${money(byCat[c])}</span></div>`; });
+  html+=`<div class="bd-row" style="font-weight:700;color:var(--brass)"><span>TOTAL</span><span>${money(grandTotal(t))}</span></div>`;
+  const ppl=travellers(t);
+  if(ppl>1) html+=`<div class="bd-row" style="color:var(--stamp)"><span>Per person (÷${ppl})</span><span>${money(grandTotal(t)/ppl)}</span></div>`;
+  $('budBreakdown').innerHTML=html;
+}
+function renderBudget(){
+  const t=currentTrip(); const el=$('expenseList');
+  renderBudgetTotals(); renderBudgetBreakdown();
+  if(!t.expenses.length){ el.innerHTML='<div class="empty">Travel and stay costs are pulled in automatically.<br>Add meals, local transport, anything else here.</div>'; return; }
+  el.innerHTML=t.expenses.map(e=>`
+    <div class="exp-row">
+      <select onchange="updExp('${e.id}','cat',this.value)">
+        ${CATEGORIES.map(c=>`<option ${e.cat===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+      <input type="text" placeholder="Description" value="${esc(e.label)}" onchange="updExp('${e.id}','label',this.value)">
+      <input type="number" placeholder="0" value="${esc(e.amount)}" oninput="updExp('${e.id}','amount',this.value)">
+      <button class="del" onclick="delExp('${e.id}')">✕</button>
+    </div>`).join('');
+}
+
+/* ================= world map ================= */
+function proj(lon,lat){ return [ (lon+180)/360*MW, (90-lat)/180*MH ]; }
+function landPaths(){
+  return LAND.map(ring=>{
+    const d=ring.map((p,i)=>{ const [x,y]=proj(p[0],p[1]); return (i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1); }).join(' ')+' Z';
+    return `<path d="${d}" fill="var(--land)" stroke="rgba(245,243,238,.18)" stroke-width="1"/>`;
+  }).join('');
+}
+function renderMap(){
+  const wrap=$('mapWrap');
+  const plotted=[], missing=[];
+  store.trips.forEach(t=>{
+    if(COORDS[t.country]) plotted.push(t); else if(t.country) missing.push(t);
+  });
+  // group by country to fan out overlapping markers
+  const byCountry={};
+  plotted.forEach(t=>{ (byCountry[t.country]=byCountry[t.country]||[]).push(t); });
+
+  let markers='';
+  Object.keys(byCountry).forEach(c=>{
+    const list=byCountry[c], [lat,lon]=COORDS[c];
+    list.forEach((t,i)=>{
+      const off = list.length>1 ? (i-(list.length-1)/2)*16 : 0;
+      const [x,y]=proj(lon,lat);
+      const col=statusColour(tripStatus(t));
+      markers+=`<circle class="marker" cx="${(x+off).toFixed(1)}" cy="${y.toFixed(1)}" r="8"
+        fill="${col}" stroke="#fff" stroke-width="2" onclick="mapPop('${t.id}',${(x+off).toFixed(1)},${y.toFixed(1)})"/>`;
+    });
+  });
+
+  wrap.innerHTML=`<svg viewBox="0 0 ${MW} ${MH}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="${MW}" height="${MH}" fill="var(--sea)"/>
+      ${landPaths()}
+      ${markers}
+    </svg>`;
+
+  const countries=Object.keys(byCountry).length + new Set(missing.map(t=>t.country)).size;
+  const cities=new Set(store.trips.map(t=>t.city).filter(Boolean)).size;
+  $('mCountries').textContent=countries;
+  $('mTrips').textContent=store.trips.length;
+  $('mCities').textContent=cities;
+  $('mapMeta').textContent = store.trips.length ? 'tap a marker for trip details' : 'no trips to plot yet';
+
+  $('mapUnplotted').innerHTML = missing.length
+    ? `<div class="notice">Not on the map yet: ${missing.map(t=>esc(t.country)).join(', ')} — typed-in countries aren't plotted.</div>`
+    : '';
+}
+function mapPop(id,x,y){
+  const t=store.trips.find(t=>t.id===id); if(!t) return;
+  const wrap=$('mapWrap');
+  wrap.querySelectorAll('.mapop').forEach(e=>e.remove());
+  const st=tripStatus(t);
+  const label={visited:'Visited',upcoming:'Upcoming',now:'Happening now',planned:'No dates'}[st];
+  const pop=document.createElement('div');
+  pop.className='mapop';
+  pop.style.left=(x/MW*100)+'%';
+  pop.style.top=(y/MH*100)+'%';
+  pop.innerHTML=`<button class="x" onclick="this.parentNode.remove()">✕</button>
+    <div class="nm">${esc(t.name||t.city||t.country)}</div>
+    <div class="pl">${esc([t.city,t.country].filter(Boolean).join(', '))}</div>
+    <div class="dt">${fmtRange(t.start,t.end)}</div>
+    <span class="st" style="background:${statusColour(st)}">${label}</span>
+    <button class="go" onclick="openTrip('${t.id}')">Open trip</button>`;
+  wrap.appendChild(pop);
+}
+
+/* ================= AI suggestions ================= */
+async function askClaude(prompt){
+  if(!apiKey) throw new Error('NOKEY');
+  const res=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-api-key":apiKey,
+      "anthropic-version":"2023-06-01",
+      "anthropic-dangerous-direct-browser-access":"true"
+    },
+    body:JSON.stringify({model:"claude-sonnet-5",max_tokens:1200,messages:[{role:"user",content:prompt}]})
+  });
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const data=await res.json();
+  const text=(data.content||[]).map(c=>c.text||'').join('\n');
+  const clean=text.replace(/```json/g,'').replace(/```/g,'').trim();
+  const a=clean.indexOf('['), b=clean.lastIndexOf(']');
+  return JSON.parse(a>=0?clean.slice(a,b+1):clean);
+}
+function sugCards(list){
+  return list.map(s=>`<div class="sug-card">
+      <h4>${esc(s.name)}</h4>
+      <div class="why">${esc(s.why)}</div>
+      <div class="sug-meta">
+        ${s.cost?`<span>💷 ${esc(s.cost)}</span>`:''}
+        ${s.transport?`<span>🚇 ${esc(s.transport)}</span>`:''}
+        ${s.time?`<span>⏱ ${esc(s.time)}</span>`:''}
+        ${s.type?`<span>${esc(s.type)}</span>`:''}
+      </div></div>`).join('');
+}
+function renderExplore(){
+  const t=currentTrip(); const el=$('exploreArea');
+  const place=[t.city,t.country].filter(Boolean).join(', ');
+  if(!place){ el.innerHTML='<div class="empty">Pick a country and city on the Plan tab first.</div>'; return; }
+  if(t.exploreCache){
+    el.innerHTML=`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;opacity:.55;margin-bottom:12px;">Suggestions for ${esc(place)}</div>`
+      +sugCards(t.exploreCache)
+      +`<button class="btn btn-ghost" onclick="fetchExplore()">Get new suggestions</button>
+        <div class="notice">Costs and travel times are estimates. Check opening hours and prices before you go.</div>`;
+  } else {
+    el.innerHTML=`<div class="empty">Get must-visit places, routes and cost estimates for ${esc(place)}.</div>
+      <button class="btn btn-brass" onclick="fetchExplore()">Find things to do</button>`;
+  }
+}
+async function fetchExplore(){
+  const t=currentTrip();
+  const place=[t.city,t.country].filter(Boolean).join(', ');
+  $('exploreArea').innerHTML='<div class="loader">Finding places in '+esc(t.city||place)+'</div>';
+  const dates=(t.start&&t.end)?`The trip runs ${t.start} to ${t.end}, so account for the season.`:'';
+  const ppl=travellers(t);
+  const prompt=`You are an experienced local travel guide for ${place}. ${dates}
+The party is ${ppl} traveller${ppl===1?'':'s'} — factor that into cost estimates where it matters.
+Suggest 6 genuinely worthwhile things to do — a mix of famous must-sees and one or two things visitors often miss.
+Return ONLY a JSON array, no markdown, no preamble. Each object must have exactly these keys:
+"name", "type" (short category e.g. Museum, Viewpoint, Beach, Neighbourhood),
+"why" (1-2 sentences on what makes it worth the trip),
+"cost" (entry cost in GBP per person, e.g. "Free" or "~£12"),
+"transport" (how to get there from the city centre, naming the actual line/bus/walk time),
+"time" (how long to allow, e.g. "2-3 hrs").`;
+  try{ t.exploreCache=await askClaude(prompt); save(); renderExplore(); }
+  catch(e){ $('exploreArea').innerHTML=aiError(e)+'<button class="btn btn-brass" onclick="fetchExplore()">Retry</button>'; }
+}
+function renderNearby(){
+  const t=currentTrip(); const el=$('nearbyArea');
+  const stay=(t.stays||[]).find(s=>s.postcode);
+  if(!stay){ el.innerHTML='<div class="empty">Add a stay with a postcode on the Stays tab.<br>The postcode is what pins the 3-mile radius.</div>'; return; }
+  const label=stay.postcode+(stay.name?' · '+stay.name:'');
+  if(t.nearbyCache){
+    el.innerHTML=`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;opacity:.55;margin-bottom:12px;">Within ~3 miles of ${esc(label)}</div>`
+      +sugCards(t.nearbyCache)
+      +`<button class="btn btn-ghost" onclick="fetchNearby()">Get new suggestions</button>
+        <div class="notice">Distances are worked out from the postcode you entered, not live GPS. Confirm on a map before setting off.</div>`;
+  } else {
+    el.innerHTML=`<div class="empty">Find what's on the doorstep of ${esc(label)}.</div>
+      <button class="btn btn-brass" onclick="fetchNearby()">Find nearby spots</button>`;
+  }
+}
+async function fetchNearby(){
+  const t=currentTrip();
+  const stay=(t.stays||[]).find(s=>s.postcode);
+  const place=[t.city,t.country].filter(Boolean).join(', ');
+  const ppl=travellers(t);
+  $('nearbyArea').innerHTML='<div class="loader">Looking around '+esc(stay.postcode)+'</div>';
+  const prompt=`A party of ${ppl} traveller${ppl===1?'':'s'} is staying at postcode "${stay.postcode}" in ${place}${stay.name?', at '+stay.name:''}${stay.address?' ('+stay.address+')':''}.
+Work out which district or neighbourhood that postcode covers, then suggest 6 things within roughly a 3 mile (5 km) radius of it — walkable or one short transit hop.
+Include a mix: somewhere to eat, a bar or cafe, a local attraction, a park or green space, a shop or market.
+Favour places locals actually use over tourist traps. Name the neighbourhood in the first "why" so the traveller can sanity-check the location.
+Return ONLY a JSON array, no markdown, no preamble. Each object must have exactly these keys:
+"name", "type" (e.g. Restaurant, Cafe, Park, Market, Attraction),
+"why" (1-2 sentences on what it's like and what to order or see),
+"cost" (typical spend in GBP per person, e.g. "~£15 a head"),
+"transport" (walking time from the postcode, or the specific bus/metro),
+"time" (how long to allow).`;
+  try{ t.nearbyCache=await askClaude(prompt); save(); renderNearby(); }
+  catch(e){ $('nearbyArea').innerHTML=aiError(e)+'<button class="btn btn-brass" onclick="fetchNearby()">Retry</button>'; }
+}
+
+function aiError(e){
+  if(String(e.message)==='NOKEY'){
+    return '<div class="err">Suggestions need an API key. Add one under Settings — everything else in the app works without it.</div>';
+  }
+  return '<div class="err">Could not load suggestions. Check your connection, and that your API key is valid and has credit.</div>';
+}
+
+/* ================= settings & backup ================= */
+function renderSettings(){
+  $('setKey').value = apiKey;
+  $('keyState').textContent = apiKey ? 'Key saved — suggestions are on' : 'No key — suggestions are off';
+  $('keyState').style.color = apiKey ? 'var(--stamp)' : 'var(--danger)';
+  const bytes = new Blob([JSON.stringify(store)]).size;
+  $('dataSize').textContent = store.trips.length + ' trips · ' + (bytes/1024).toFixed(1) + ' KB stored';
+}
+function saveKey(){
+  apiKey = $('setKey').value.trim();
+  if(apiKey) localStorage.setItem(KEY_KEY, apiKey); else localStorage.removeItem(KEY_KEY);
+  renderSettings();
+  alert(apiKey ? 'Key saved on this device.' : 'Key removed.');
+}
+function exportData(){
+  const blob = new Blob([JSON.stringify(store,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'my-trips-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importData(input){
+  const f = input.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try{
+      const d = JSON.parse(r.result);
+      if(!d.trips) throw new Error('bad file');
+      if(!confirm('Replace all ' + store.trips.length + ' trips on this device with ' + d.trips.length + ' from the file?')) return;
+      store = d; save(); renderTrips(); renderSettings();
+      alert('Restored ' + d.trips.length + ' trips.');
+    }catch(e){ alert('That file was not a trip backup.'); }
+  };
+  r.readAsText(f);
+  input.value = '';
+}
+function wipeData(){
+  if(!confirm('Delete every trip on this device? Export a backup first if you want to keep them.')) return;
+  if(!confirm('Last chance — this cannot be undone.')) return;
+  store = {trips:[]}; save(); renderTrips(); renderSettings();
+}
+
+loadStore();
+</script>
+</body>
+</html>
