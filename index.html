@@ -141,6 +141,35 @@
   .mapstats>div{flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px;text-align:center;}
   .mapstats .n{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:20px;font-weight:700;color:var(--stamp);}
   .mapstats .l{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;opacity:.55;margin-top:3px;}
+
+  /* chart */
+  .chart{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px 10px 6px;}
+  .chart svg{display:block;width:100%;height:auto;}
+  .chartleg{margin-top:8px;}
+
+  /* preference chips */
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+  .chip{padding:7px 12px;border-radius:18px;border:1px solid var(--line);background:#fff;font-size:12.5px;font-family:-apple-system,sans-serif;cursor:pointer;user-select:none;}
+  .chip.on{background:var(--stamp);color:#fff;border-color:var(--stamp);}
+  .toppick{border-left-color:var(--stamp)!important;}
+  .toppick-badge{display:inline-block;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;background:var(--stamp);color:#fff;padding:3px 7px;border-radius:4px;margin-bottom:6px;}
+  .locpick{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;-webkit-overflow-scrolling:touch;}
+  .locpick::-webkit-scrollbar{display:none;}
+  .locpick div{flex-shrink:0;padding:7px 12px;border-radius:18px;background:var(--paper-dim);font-size:12.5px;font-family:-apple-system,sans-serif;cursor:pointer;white-space:nowrap;}
+  .locpick div.on{background:var(--ink);color:var(--paper);}
+
+  /* chat */
+  .chat-scroll{display:flex;flex-direction:column;gap:9px;margin-bottom:12px;min-height:120px;}
+  .bubble{max-width:85%;padding:10px 12px;border-radius:13px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;}
+  .bubble.me{align-self:flex-end;background:var(--ink);color:var(--paper);border-bottom-right-radius:4px;}
+  .bubble.ai{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px;}
+  .chat-input{display:flex;gap:7px;position:sticky;bottom:8px;}
+  .chat-input textarea{flex:1;border:1px solid var(--line);border-radius:20px;padding:10px 14px;font-family:-apple-system,sans-serif;font-size:14px;resize:none;outline:none;background:#fff;max-height:100px;}
+  .chat-input textarea:focus{border-color:var(--stamp);}
+  .chat-send{width:44px;height:44px;flex-shrink:0;border:none;border-radius:50%;background:var(--stamp);color:#fff;font-size:18px;cursor:pointer;}
+  .chat-send:disabled{opacity:.4;}
+  .chat-hint{text-align:center;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.5;margin:6px 0 10px;line-height:1.5;}
+  .chat-chip{display:inline-block;background:var(--paper-dim);border:none;border-radius:14px;padding:7px 12px;font-size:12px;font-family:-apple-system,sans-serif;margin:3px 3px 0 0;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -165,11 +194,9 @@
       <div class="card">
         <div class="card-title" style="margin-bottom:10px;">New trip</div>
         <div class="field"><label>Trip name</label><input id="nt_name" placeholder="e.g. Highlands week"></div>
-        <div class="field"><label>Country</label><select id="nt_country" onchange="onCountryPick('nt')"></select></div>
-        <div class="field" id="nt_countryOtherWrap" style="display:none;"><label>Country name</label><input id="nt_countryOther" placeholder="Type country" oninput="onCityListRefresh('nt')"></div>
-        <div class="field"><label>City</label><select id="nt_city" onchange="onCityPick('nt')"></select></div>
-        <div class="field" id="nt_cityOtherWrap" style="display:none;"><label>City name</label><input id="nt_cityOther" placeholder="Type city"></div>
-        <div class="row2">
+        <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin-bottom:6px;">Stops — add up to 5</div>
+        <div id="ntLocsHost"></div>
+        <div class="row2" style="margin-top:4px">
           <div class="field"><label>Start date</label><input id="nt_start" type="date"></div>
           <div class="field"><label>End date</label><input id="nt_end" type="date"></div>
         </div>
@@ -275,6 +302,7 @@
       <div class="tab" data-panel="p_budget">Budget</div>
       <div class="tab" data-panel="p_explore">Explore</div>
       <div class="tab" data-panel="p_nearby">Near stay</div>
+      <div class="tab" data-panel="p_chat">Ask AI</div>
     </div>
 
     <div class="panel active" id="p_sum"><div id="summaryArea"></div></div>
@@ -282,11 +310,9 @@
     <div class="panel" id="p_plan">
       <div class="card">
         <div class="field"><label>Trip name</label><input id="ed_name" oninput="editTrip('name',this.value)"></div>
-        <div class="field"><label>Country</label><select id="ed_country" onchange="onCountryPick('ed')"></select></div>
-        <div class="field" id="ed_countryOtherWrap" style="display:none;"><label>Country name</label><input id="ed_countryOther" oninput="onCityListRefresh('ed');editTrip('country',this.value)"></div>
-        <div class="field"><label>City</label><select id="ed_city" onchange="onCityPick('ed')"></select></div>
-        <div class="field" id="ed_cityOtherWrap" style="display:none;"><label>City name</label><input id="ed_cityOther" oninput="editTrip('city',this.value)"></div>
-        <div class="row2">
+        <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin-bottom:6px;">Stops — up to 5</div>
+        <div id="edLocsHost"></div>
+        <div class="row2" style="margin-top:4px">
           <div class="field"><label>Start</label><input id="ed_start" type="date" oninput="editTrip('start',this.value)"></div>
           <div class="field"><label>End</label><input id="ed_end" type="date" oninput="editTrip('end',this.value)"></div>
         </div>
@@ -323,6 +349,7 @@
 
     <div class="panel" id="p_explore"><div id="exploreArea"></div></div>
     <div class="panel" id="p_nearby"><div id="nearbyArea"></div></div>
+    <div class="panel" id="p_chat"><div id="chatArea"></div></div>
   </div>
 </div>
 
@@ -419,6 +446,13 @@ const MW = 1000, MH = 500;
 const DB_KEY = 'tripplanner_offline_v1';
 const KEY_KEY = 'tripplanner_apikey';
 let apiKey = '';
+const MAX_STOPS = 5;
+const CATCOLORS = {Travel:'#2F6F62',Accommodation:'#C9A227',Food:'#E8613C',Transport:'#4A7BA6',Activities:'#8A5DA6',Shopping:'#C25E8B',Other:'#7A8699',Flights:'#2F6F62'};
+function catColor(k){ return CATCOLORS[k]||'#7A8699'; }
+const PREF_TAGS = ['Food & drink','Nightlife','History','Museums & art','Nature & outdoors','Beaches','Shopping','Family-friendly','Budget','Hidden gems'];
+let ntLocs = [{country:'',city:''}];
+let exploreLocIdx = 0;
+let chatBusy = false;
 
 let store = { trips: [] };
 let currentTripId = null, saveTimer = null;
@@ -435,8 +469,21 @@ async function loadStore(){
   try{ const r=localStorage.getItem(DB_KEY); if(r) store=JSON.parse(r); }catch(e){}
   try{ apiKey = localStorage.getItem(KEY_KEY) || ''; }catch(e){ apiKey=''; }
   if(!store.trips) store.trips=[];
-  buildCountrySelect('nt'); onCountryPick('nt');
+  store.trips.forEach(migrateTrip);
+  ntLocs=[{country:'',city:''}];
+  renderLocs('new');
   renderTrips(); setStatus('saved on this device');
+}
+function migrateTrip(t){
+  if(!Array.isArray(t.locations) || !t.locations.length){
+    t.locations = [{country:t.country||'', city:t.city||''}];
+  }
+  if(!t.country) t.country = t.locations[0].country||'';
+  if(!t.city) t.city = t.locations[0].city||'';
+  if(!t.chat) t.chat = [];
+  if(!t.explorePrefs) t.explorePrefs = {tags:[], other:''};
+  if(Array.isArray(t.exploreCache)) t.exploreCache = {0:t.exploreCache};
+  if(t.exploreCache==null) t.exploreCache = {};
 }
 function save(){
   setStatus('saving');
@@ -487,6 +534,86 @@ function onCityPick(pfx){
   if(pfx==='ed') editTrip('city',cityValue('ed'));
 }
 
+/* ================= multi-stop location picker ================= */
+function locScope(which){
+  if(which==='new') return {arr:ntLocs, host:'ntLocsHost', edit:false};
+  const t=currentTrip(); return {arr:t.locations, host:'edLocsHost', edit:true};
+}
+function renderLocs(which){
+  const sc=locScope(which); const host=$(sc.host); if(!host) return;
+  const countries=Object.keys(PLACES).sort();
+  const html=sc.arr.map((loc,i)=>{
+    const cCustom = loc.country && !countries.includes(loc.country);
+    const cOther = loc._cOther || cCustom;
+    const cOpts='<option value="">Select country…</option>'+
+      countries.map(c=>`<option ${loc.country===c?'selected':''}>${esc(c)}</option>`).join('')+
+      `<option value="__other" ${cOther?'selected':''}>${OTHER}</option>`;
+    const cityList=PLACES[loc.country]||[];
+    const cityCustom = loc.city && !cityList.includes(loc.city);
+    const cityOther = loc._cityOther || cityCustom || (!cityList.length && (loc.country||loc.city));
+    let cityOpts;
+    if(cityList.length){
+      cityOpts='<option value="">Select city…</option>'+
+        cityList.map(c=>`<option ${loc.city===c?'selected':''}>${esc(c)}</option>`).join('')+
+        `<option value="__other" ${cityOther?'selected':''}>${OTHER}</option>`;
+    } else { cityOpts=`<option value="__other" selected>${OTHER}</option>`; }
+    return `<div class="card" style="padding:11px;margin-bottom:8px">
+      <div class="card-head" style="margin-bottom:6px">
+        <span class="tagpill ${i===0?'brass':'out'}">${i===0?'Main stop':'Stop '+(i+1)}</span>
+        ${sc.arr.length>1?`<button class="del" onclick="locRemove('${which}',${i})">✕</button>`:''}
+      </div>
+      <div class="field"><label>Country${i===0?' *':''}</label>
+        <select onchange="locSetCountry('${which}',${i},this.value)">${cOpts}</select></div>
+      ${cOther?`<div class="field"><label>Country name</label><input value="${esc(loc.country)}" placeholder="Type country" oninput="locSetText('${which}',${i},'country',this.value)"></div>`:''}
+      <div class="field"><label>City${i===0?' *':''}</label>
+        <select onchange="locSetCity('${which}',${i},this.value)">${cityOpts}</select></div>
+      ${cityOther?`<div class="field"><label>City name</label><input value="${esc(loc.city)}" placeholder="Type city" oninput="locSetText('${which}',${i},'city',this.value)"></div>`:''}
+    </div>`;
+  }).join('');
+  const addBtn = sc.arr.length<MAX_STOPS
+    ? `<button class="btn btn-ghost" onclick="locAdd('${which}')">+ Add another stop</button>` : '';
+  host.innerHTML = html + addBtn;
+}
+function locSetCountry(which,i,val){
+  const sc=locScope(which); const loc=sc.arr[i];
+  if(val==='__other'){ loc._cOther=true; loc.country=''; }
+  else { loc._cOther=false; loc.country=val; }
+  loc.city=''; loc._cityOther=false;
+  renderLocs(which); if(sc.edit) commitEditLocs();
+}
+function locSetCity(which,i,val){
+  const sc=locScope(which); const loc=sc.arr[i];
+  if(val==='__other'){ loc._cityOther=true; loc.city=''; }
+  else { loc._cityOther=false; loc.city=val; }
+  renderLocs(which); if(sc.edit) commitEditLocs();
+}
+function locSetText(which,i,field,val){
+  const sc=locScope(which); sc.arr[i][field]=val;
+  if(sc.edit) commitEditLocs();
+}
+function locAdd(which){ const sc=locScope(which); if(sc.arr.length<MAX_STOPS){ sc.arr.push({country:'',city:''}); renderLocs(which); if(sc.edit) commitEditLocs(); } }
+function locRemove(which,i){ const sc=locScope(which); sc.arr.splice(i,1); renderLocs(which); if(sc.edit) commitEditLocs(); }
+function commitEditLocs(){
+  const t=currentTrip(); if(!t) return;
+  t.country=t.locations[0]?t.locations[0].country:''; t.city=t.locations[0]?t.locations[0].city:'';
+  save(); updateTripHeader(); renderSummary();
+  exploreLocIdx=Math.min(exploreLocIdx, Math.max(0,t.locations.length-1));
+  renderExplore();
+}
+function cleanLocs(arr){
+  return arr.filter(l=>(l.country&&l.country.trim())||(l.city&&l.city.trim()))
+            .map(l=>({country:(l.country||'').trim(), city:(l.city||'').trim()}));
+}
+function locLabel(t){
+  const locs=(t.locations||[]).filter(l=>l.city||l.country)
+    .map(l=>[l.city,l.country].filter(Boolean).join(', '));
+  return locs.length ? locs.join('  •  ') : 'Destination not set';
+}
+function primaryPlace(t){
+  const l=(t.locations||[])[0]; if(!l) return '';
+  return [l.city,l.country].filter(Boolean).join(', ');
+}
+
 /* ================= trips list ================= */
 function tripsThisYear(){
   const y=new Date().getFullYear();
@@ -520,11 +647,11 @@ function renderTrips(){
   if(!store.trips.length){ el.innerHTML='<div class="empty">No trips yet.<br>Add your first one below.</div>'; return; }
   const sorted=[...store.trips].sort((a,b)=>(a.start||'9999').localeCompare(b.start||'9999'));
   el.innerHTML=sorted.map(t=>{
-    const place=[t.city,t.country].filter(Boolean).join(', ')||'Destination not set';
+    const place=locLabel(t);
     const ppl=num(t.travellers)>1?` · ${t.travellers} travellers`:'';
     return `<div class="trip-card" onclick="openTrip('${t.id}')">
       <div style="min-width:0">
-        <div class="where">${esc(t.name||place)}</div>
+        <div class="where">${esc(t.name||primaryPlace(t)||'Destination not set')}</div>
         <div class="when">${esc(place)} · ${fmtRange(t.start,t.end)}${ppl}</div>
       </div>
       <div class="cost">${money(grandTotal(t))}<span class="cd">${countdown(t)}</span></div>
@@ -539,14 +666,18 @@ function fmtRange(a,b){
 function showNewTrip(){ $('newTripForm').style.display='block'; $('newTripBtn').style.display='none'; }
 function hideNewTrip(){ $('newTripForm').style.display='none'; $('newTripBtn').style.display='block'; }
 function createTrip(){
-  const t={id:uid(),name:$('nt_name').value.trim(),country:countryValue('nt'),city:cityValue('nt'),
+  const name=$('nt_name').value.trim();
+  const locs=cleanLocs(ntLocs);
+  if(!name && !locs.length){ alert('Add a trip name or at least one stop (country/city).'); return; }
+  const finalLocs = locs.length ? locs : [{country:'',city:''}];
+  const t={id:uid(),name:name,locations:finalLocs,
+    country:finalLocs[0].country,city:finalLocs[0].city,
     start:$('nt_start').value,end:$('nt_end').value,travellers:num($('nt_travellers').value)||1,
-    notes:'',travel:[],stays:[],expenses:[],exploreCache:null,nearbyCache:null};
-  if(!t.name&&!t.city){ alert('Add a trip name or pick a city first.'); return; }
+    notes:'',travel:[],stays:[],expenses:[],chat:[],explorePrefs:{tags:[],other:''},exploreCache:{},nearbyCache:null};
   store.trips.push(t);
-  ['nt_name','nt_start','nt_end','nt_countryOther','nt_cityOther'].forEach(i=>$(i).value='');
+  ['nt_name','nt_start','nt_end'].forEach(i=>$(i).value='');
   $('nt_travellers').value=1;
-  buildCountrySelect('nt'); onCountryPick('nt');
+  ntLocs=[{country:'',city:''}]; renderLocs('new');
   hideNewTrip(); save(); renderTrips(); openTrip(t.id);
 }
 
@@ -572,23 +703,25 @@ document.querySelectorAll('.tab').forEach(tab=>{
     tab.classList.add('active'); $(tab.dataset.panel).classList.add('active');
   });
 });
+function updateTripHeader(){
+  const t=currentTrip(); if(!t) return;
+  $('tripHeadName').textContent=t.name||primaryPlace(t)||'Destination not set';
+  $('tripHeadRoute').textContent=locLabel(t).toUpperCase()+' · '+fmtRange(t.start,t.end);
+}
 function renderTripDetail(){
   const t=currentTrip(); if(!t) return;
-  const place=[t.city,t.country].filter(Boolean).join(', ')||'Destination not set';
-  $('tripHeadName').textContent=t.name||place;
-  $('tripHeadRoute').textContent=place.toUpperCase()+' · '+fmtRange(t.start,t.end);
+  exploreLocIdx=0;
+  updateTripHeader();
   $('ed_name').value=t.name||''; $('ed_start').value=t.start||'';
   $('ed_end').value=t.end||''; $('ed_notes').value=t.notes||'';
   $('ed_travellers').value=t.travellers||1;
-  buildCountrySelect('ed',t.country); onCityListRefresh('ed',t.city);
-  renderSummary(); renderTravel(); renderStays(); renderBudget(); renderExplore(); renderNearby();
+  renderLocs('edit');
+  renderSummary(); renderTravel(); renderStays(); renderBudget(); renderExplore(); renderNearby(); renderChat();
 }
 function editTrip(field,val){
   const t=currentTrip(); if(!t) return;
   t[field]= field==='travellers' ? Math.max(1,num(val)||1) : val;
-  const place=[t.city,t.country].filter(Boolean).join(', ')||'Destination not set';
-  $('tripHeadName').textContent=t.name||place;
-  $('tripHeadRoute').textContent=place.toUpperCase()+' · '+fmtRange(t.start,t.end);
+  updateTripHeader();
   save(); renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
 }
 function deleteTrip(){
@@ -609,11 +742,84 @@ function tripDays(t){
 }
 function travellers(t){ return Math.max(1,num(t.travellers)||1); }
 
+/* ================= cost per day + chart ================= */
+function dateList(t){
+  if(!t.start||!t.end) return [];
+  let d=new Date(t.start+'T00:00'); const e=new Date(t.end+'T00:00');
+  if(e<d) return [];
+  const out=[]; while(d<=e){ out.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); }
+  return out;
+}
+function catKey(cat){ return (cat==='Flights')?'Travel':cat; }
+function costByDay(t){
+  const days=dateList(t); if(!days.length) return null;
+  const idx={}; days.forEach((d,i)=>idx[d]=i);
+  const seg=days.map(()=>({}));
+  const addDay=(d,k,a)=>{ const i=idx[d]; if(i==null) return false; seg[i][k]=(seg[i][k]||0)+a; return true; };
+  const spread=(k,a)=>{ const per=a/days.length; for(let i=0;i<days.length;i++){ seg[i][k]=(seg[i][k]||0)+per; } };
+  (t.travel||[]).forEach(b=>{ const c=num(b.cost); if(!c) return;
+    if(b.journey==='Return'&&b.date&&b.retDate){
+      if(!addDay(b.date,'Travel',c/2)) spread('Travel',c/2);
+      if(!addDay(b.retDate,'Travel',c/2)) spread('Travel',c/2);
+    } else if(b.date){ if(!addDay(b.date,'Travel',c)) spread('Travel',c); }
+    else spread('Travel',c);
+  });
+  (t.stays||[]).forEach(s=>{ const c=num(s.cost); if(!c) return;
+    if(s.checkin&&s.checkout){
+      const nights=[]; let d=new Date(s.checkin+'T00:00'); const o=new Date(s.checkout+'T00:00');
+      while(d<o){ nights.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); }
+      const inRange=nights.filter(n=>idx[n]!=null);
+      if(inRange.length){ const per=c/inRange.length; inRange.forEach(n=>addDay(n,'Accommodation',per)); }
+      else spread('Accommodation',c);
+    } else spread('Accommodation',c);
+  });
+  (t.expenses||[]).forEach(e=>{ const c=num(e.amount); if(!c) return; spread(catKey(e.cat),c); });
+  return {days,seg};
+}
+const STACK_ORDER=['Travel','Accommodation','Food','Transport','Activities','Shopping','Other'];
+function chartSVG(t){
+  const data=costByDay(t);
+  if(!data) return '<div class="notice">Add trip start & end dates to see the cost-per-day chart.</div>';
+  const {days,seg}=data;
+  const totals=seg.map(s=>Object.values(s).reduce((a,b)=>a+b,0));
+  const max=Math.max(1,...totals);
+  const n=days.length;
+  const W=1000,H=340,padB=44,padT=26,padL=10,padR=10;
+  const plotH=H-padB-padT, colW=(W-padL-padR)/n;
+  const barW=Math.min(colW*0.66,64);
+  const present=new Set();
+  let bars='';
+  seg.forEach((s,i)=>{
+    let y=H-padB;
+    STACK_ORDER.forEach(k=>{ const v=s[k]; if(!v) return; present.add(k);
+      const h=v/max*plotH; y-=h;
+      const x=padL+i*colW+(colW-barW)/2;
+      bars+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(h,0.5).toFixed(1)}" fill="${catColor(k)}" rx="2"/>`;
+    });
+  });
+  let labels='';
+  days.forEach((d,i)=>{
+    if(n>12 && i%2!==0 && i!==n-1) return;
+    const x=padL+i*colW+colW/2;
+    labels+=`<text x="${x.toFixed(1)}" y="${H-padB+20}" font-size="17" text-anchor="middle" fill="rgba(27,42,65,.5)" font-family="monospace">${i+1}</text>`;
+  });
+  const svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    ${bars}
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="rgba(27,42,65,.18)" stroke-width="1"/>
+    ${labels}
+    <text x="${padL}" y="${padT-8}" font-size="17" fill="rgba(27,42,65,.5)" font-family="monospace">peak ${money(max)}/day</text>
+  </svg>`;
+  const legend=STACK_ORDER.filter(k=>present.has(k)).map(k=>`<span><i style="background:${catColor(k)}"></i>${k}</span>`).join('');
+  const d1=new Date(days[0]+'T00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  return `<div class="chart">${svg}</div><div class="legend chartleg">${legend}</div>
+    <div class="notice" style="margin-top:8px">Day 1 = ${d1}. Undated costs are spread evenly; hotel cost is split across its nights.</div>`;
+}
+
 /* ================= summary ================= */
 function renderSummary(){
   const t=currentTrip(); const el=$('summaryArea');
   const days=tripDays(t), total=grandTotal(t), ppl=travellers(t);
-  const place=[t.city,t.country].filter(Boolean).join(', ')||'Not set';
+  const place=locLabel(t);
   const stay=(t.stays||[])[0];
 
   let html=`<div class="sum-hero">
@@ -629,11 +835,13 @@ function renderSummary(){
     </div>`;
 
   html+=`<div class="sum-block"><h3>Trip</h3>
-    <div class="sum-line"><span class="k">Destination</span><span class="v">${esc(place)}</span></div>
+    <div class="sum-line"><span class="k">${(t.locations||[]).length>1?'Stops':'Destination'}</span><span class="v">${esc(place)}</span></div>
     <div class="sum-line"><span class="k">Dates</span><span class="v">${fmtRange(t.start,t.end)}</span></div>
     <div class="sum-line"><span class="k">Travellers</span><span class="v">${ppl}</span></div>
     ${t.notes?`<div class="sum-line"><span class="k">Notes</span><span class="v">${esc(t.notes)}</span></div>`:''}
   </div>`;
+
+  html+=`<div class="sum-block"><h3>Cost per day</h3>${chartSVG(t)}</div>`;
 
   if((t.travel||[]).length){
     html+=`<div class="sum-block"><h3>Travel</h3>`+t.travel.map(b=>{
@@ -831,13 +1039,21 @@ function landPaths(){
 }
 function renderMap(){
   const wrap=$('mapWrap');
-  const plotted=[], missing=[];
+  const byCountry={}; const missing=new Set();
+  const allCountries=new Set(), allCities=new Set();
   store.trips.forEach(t=>{
-    if(COORDS[t.country]) plotted.push(t); else if(t.country) missing.push(t);
+    const locs=(t.locations&&t.locations.length)?t.locations:[{country:t.country,city:t.city}];
+    const seen=new Set();
+    locs.forEach(l=>{
+      if(l.country) allCountries.add(l.country);
+      if(l.city) allCities.add(l.city);
+      if(l.country && COORDS[l.country]){
+        if(!seen.has(l.country)){ seen.add(l.country);
+          (byCountry[l.country]=byCountry[l.country]||[]).push(t);
+        }
+      } else if(l.country){ missing.add(l.country); }
+    });
   });
-  // group by country to fan out overlapping markers
-  const byCountry={};
-  plotted.forEach(t=>{ (byCountry[t.country]=byCountry[t.country]||[]).push(t); });
 
   let markers='';
   Object.keys(byCountry).forEach(c=>{
@@ -857,15 +1073,13 @@ function renderMap(){
       ${markers}
     </svg>`;
 
-  const countries=Object.keys(byCountry).length + new Set(missing.map(t=>t.country)).size;
-  const cities=new Set(store.trips.map(t=>t.city).filter(Boolean)).size;
-  $('mCountries').textContent=countries;
+  $('mCountries').textContent=allCountries.size;
   $('mTrips').textContent=store.trips.length;
-  $('mCities').textContent=cities;
+  $('mCities').textContent=allCities.size;
   $('mapMeta').textContent = store.trips.length ? 'tap a marker for trip details' : 'no trips to plot yet';
 
-  $('mapUnplotted').innerHTML = missing.length
-    ? `<div class="notice">Not on the map yet: ${missing.map(t=>esc(t.country)).join(', ')} — typed-in countries aren't plotted.</div>`
+  $('mapUnplotted').innerHTML = missing.size
+    ? `<div class="notice">Not on the map yet: ${[...missing].map(esc).join(', ')} — typed-in countries aren't plotted.</div>`
     : '';
 }
 function mapPop(id,x,y){
@@ -879,17 +1093,19 @@ function mapPop(id,x,y){
   pop.style.left=(x/MW*100)+'%';
   pop.style.top=(y/MH*100)+'%';
   pop.innerHTML=`<button class="x" onclick="this.parentNode.remove()">✕</button>
-    <div class="nm">${esc(t.name||t.city||t.country)}</div>
-    <div class="pl">${esc([t.city,t.country].filter(Boolean).join(', '))}</div>
+    <div class="nm">${esc(t.name||primaryPlace(t)||'Trip')}</div>
+    <div class="pl">${esc(locLabel(t))}</div>
     <div class="dt">${fmtRange(t.start,t.end)}</div>
     <span class="st" style="background:${statusColour(st)}">${label}</span>
     <button class="go" onclick="openTrip('${t.id}')">Open trip</button>`;
   wrap.appendChild(pop);
 }
 
-/* ================= AI suggestions ================= */
-async function askClaude(prompt){
+/* ================= AI core ================= */
+async function callClaude(opts){
   if(!apiKey) throw new Error('NOKEY');
+  const body={model:"claude-sonnet-5",max_tokens:opts.max_tokens||1000,messages:opts.messages};
+  if(opts.system) body.system=opts.system;
   const res=await fetch("https://api.anthropic.com/v1/messages",{
     method:"POST",
     headers:{
@@ -898,17 +1114,33 @@ async function askClaude(prompt){
       "anthropic-version":"2023-06-01",
       "anthropic-dangerous-direct-browser-access":"true"
     },
-    body:JSON.stringify({model:"claude-sonnet-5",max_tokens:1200,messages:[{role:"user",content:prompt}]})
+    body:JSON.stringify(body)
   });
   if(!res.ok) throw new Error('HTTP '+res.status);
   const data=await res.json();
-  const text=(data.content||[]).map(c=>c.text||'').join('\n');
+  return (data.content||[]).map(c=>c.text||'').join('\n');
+}
+async function askClaude(prompt){
+  const text=await callClaude({messages:[{role:"user",content:prompt}],max_tokens:1400});
   const clean=text.replace(/```json/g,'').replace(/```/g,'').trim();
   const a=clean.indexOf('['), b=clean.lastIndexOf(']');
   return JSON.parse(a>=0?clean.slice(a,b+1):clean);
 }
+/* trip context shared by explore + chat */
+function tripContext(t){
+  const locs=locLabel(t);
+  const ppl=travellers(t);
+  const dates=(t.start&&t.end)?`${t.start} to ${t.end} (${tripDays(t)} days)`:'dates not set';
+  const stays=(t.stays||[]).filter(s=>s.name||s.postcode)
+    .map(s=>`${s.name||s.type}${s.postcode?' ('+s.postcode+')':''}`).join('; ');
+  let ctx=`Trip: ${t.name||locs}. Stops: ${locs}. Dates: ${dates}. Travellers: ${ppl}.`;
+  if(stays) ctx+=` Staying at: ${stays}.`;
+  return ctx;
+}
 function sugCards(list){
-  return list.map(s=>`<div class="sug-card">
+  const sorted=[...list].sort((a,b)=>(b.toppick?1:0)-(a.toppick?1:0));
+  return sorted.map(s=>`<div class="sug-card ${s.toppick?'toppick':''}">
+      ${s.toppick?'<div class="toppick-badge">★ Top pick</div>':''}
       <h4>${esc(s.name)}</h4>
       <div class="why">${esc(s.why)}</div>
       <div class="sug-meta">
@@ -918,37 +1150,82 @@ function sugCards(list){
         ${s.type?`<span>${esc(s.type)}</span>`:''}
       </div></div>`).join('');
 }
+function exploreLocs(t){
+  return (t.locations||[]).filter(l=>l.city||l.country);
+}
+function exploreHeader(t){
+  const locs=exploreLocs(t);
+  let h='';
+  if(locs.length>1){
+    h+=`<div class="locpick">`+locs.map((l,i)=>{
+      const lab=l.city||l.country;
+      return `<div class="${i===exploreLocIdx?'on':''}" onclick="pickExploreLoc(${i})">${esc(lab)}</div>`;
+    }).join('')+`</div>`;
+  }
+  // preference chips
+  const prefs=t.explorePrefs||{tags:[],other:''};
+  h+=`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin-bottom:7px;">What are you into? (optional)</div>`;
+  h+=`<div class="chips">`+PREF_TAGS.map(tag=>
+      `<div class="chip ${prefs.tags.includes(tag)?'on':''}" onclick="togglePref('${tag.replace(/'/g,"\\'")}')">${esc(tag)}</div>`
+    ).join('')+`</div>`;
+  h+=`<div class="field"><input placeholder="Anything else? e.g. street food, live music" value="${esc(prefs.other||'')}" oninput="setPrefOther(this.value)"></div>`;
+  return h;
+}
+function pickExploreLoc(i){ exploreLocIdx=i; renderExplore(); }
+function togglePref(tag){
+  const t=currentTrip(); const p=t.explorePrefs;
+  const i=p.tags.indexOf(tag);
+  if(i>=0) p.tags.splice(i,1); else p.tags.push(tag);
+  save(); renderExplore();
+}
+function setPrefOther(v){ currentTrip().explorePrefs.other=v; save(); }
 function renderExplore(){
   const t=currentTrip(); const el=$('exploreArea');
-  const place=[t.city,t.country].filter(Boolean).join(', ');
-  if(!place){ el.innerHTML='<div class="empty">Pick a country and city on the Plan tab first.</div>'; return; }
-  if(t.exploreCache){
-    el.innerHTML=`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;opacity:.55;margin-bottom:12px;">Suggestions for ${esc(place)}</div>`
-      +sugCards(t.exploreCache)
-      +`<button class="btn btn-ghost" onclick="fetchExplore()">Get new suggestions</button>
+  const locs=exploreLocs(t);
+  if(!locs.length){ el.innerHTML='<div class="empty">Add a country and city on the Plan tab first.</div>'; return; }
+  if(exploreLocIdx>=locs.length) exploreLocIdx=0;
+  const loc=locs[exploreLocIdx];
+  const place=[loc.city,loc.country].filter(Boolean).join(', ');
+  const cache=(t.exploreCache||{})[exploreLocIdx];
+  let html=exploreHeader(t);
+  if(cache && cache.length){
+    html+=`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;opacity:.55;margin:6px 0 12px;">Picks for ${esc(place)}</div>`
+      +sugCards(cache)
+      +`<button class="btn btn-ghost" onclick="fetchExplore()">Refresh suggestions</button>
         <div class="notice">Costs and travel times are estimates. Check opening hours and prices before you go.</div>`;
   } else {
-    el.innerHTML=`<div class="empty">Get must-visit places, routes and cost estimates for ${esc(place)}.</div>
-      <button class="btn btn-brass" onclick="fetchExplore()">Find things to do</button>`;
+    html+=`<button class="btn btn-brass" onclick="fetchExplore()">Find things to do in ${esc(loc.city||place)}</button>`;
   }
+  el.innerHTML=html;
 }
 async function fetchExplore(){
   const t=currentTrip();
-  const place=[t.city,t.country].filter(Boolean).join(', ');
-  $('exploreArea').innerHTML='<div class="loader">Finding places in '+esc(t.city||place)+'</div>';
+  const locs=exploreLocs(t); const loc=locs[exploreLocIdx];
+  const place=[loc.city,loc.country].filter(Boolean).join(', ');
+  const el=$('exploreArea');
+  el.innerHTML=exploreHeader(t)+'<div class="loader">Finding places in '+esc(loc.city||place)+'</div>';
   const dates=(t.start&&t.end)?`The trip runs ${t.start} to ${t.end}, so account for the season.`:'';
   const ppl=travellers(t);
+  const prefs=t.explorePrefs||{tags:[],other:''};
+  const wants=[...prefs.tags, prefs.other].filter(Boolean).join(', ');
+  const prefLine=wants?`The travellers are especially interested in: ${wants}. Weight your picks and your top picks toward these interests.`:'';
   const prompt=`You are an experienced local travel guide for ${place}. ${dates}
 The party is ${ppl} traveller${ppl===1?'':'s'} — factor that into cost estimates where it matters.
+${prefLine}
 Suggest 6 genuinely worthwhile things to do — a mix of famous must-sees and one or two things visitors often miss.
-Return ONLY a JSON array, no markdown, no preamble. Each object must have exactly these keys:
+Mark the 2 strongest as top picks. Return ONLY a JSON array, no markdown, no preamble. Each object must have exactly these keys:
 "name", "type" (short category e.g. Museum, Viewpoint, Beach, Neighbourhood),
-"why" (1-2 sentences on what makes it worth the trip),
+"why" (1-2 sentences on what makes it worth it${wants?', mentioning the fit with their interests where relevant':''}),
 "cost" (entry cost in GBP per person, e.g. "Free" or "~£12"),
 "transport" (how to get there from the city centre, naming the actual line/bus/walk time),
-"time" (how long to allow, e.g. "2-3 hrs").`;
-  try{ t.exploreCache=await askClaude(prompt); save(); renderExplore(); }
-  catch(e){ $('exploreArea').innerHTML=aiError(e)+'<button class="btn btn-brass" onclick="fetchExplore()">Retry</button>'; }
+"time" (how long to allow, e.g. "2-3 hrs"),
+"toppick" (true for exactly 2 of them, false for the rest).`;
+  try{
+    const list=await askClaude(prompt);
+    if(!t.exploreCache) t.exploreCache={};
+    t.exploreCache[exploreLocIdx]=list; save(); renderExplore();
+  }
+  catch(e){ el.innerHTML=exploreHeader(t)+aiError(e)+'<button class="btn btn-brass" onclick="fetchExplore()">Retry</button>'; }
 }
 function renderNearby(){
   const t=currentTrip(); const el=$('nearbyArea');
@@ -990,6 +1267,65 @@ function aiError(e){
     return '<div class="err">Suggestions need an API key. Add one under Settings — everything else in the app works without it.</div>';
   }
   return '<div class="err">Could not load suggestions. Check your connection, and that your API key is valid and has credit.</div>';
+}
+
+/* ================= Ask AI (chat) ================= */
+const CHAT_STARTERS=['Best local dish to try?','Is it walkable or do I need transport?','Any etiquette or scams to know?','What should I pack for the weather?'];
+function renderChat(){
+  const t=currentTrip(); const el=$('chatArea');
+  if(!apiKey){
+    el.innerHTML='<div class="empty">The AI chat needs an API key.<br>Add one under Settings to ask questions about your trip.</div>';
+    return;
+  }
+  const msgs=(t.chat||[]);
+  let bubbles = msgs.length
+    ? msgs.map(m=>`<div class="bubble ${m.role==='user'?'me':'ai'}">${esc(m.content)}</div>`).join('')
+    : `<div class="empty" style="padding:14px 8px">Ask anything about ${esc(primaryPlace(t)||'your trip')} — food, getting around, safety, or your saved suggestions.</div>`;
+  if(chatBusy) bubbles+=`<div class="bubble ai"><span class="loader" style="padding:0">thinking</span></div>`;
+  const starters = (!msgs.length && !chatBusy)
+    ? `<div style="margin-bottom:10px">`+CHAT_STARTERS.map(s=>`<button class="chat-chip" onclick="sendChat('${s.replace(/'/g,"\\'")}')">${esc(s)}</button>`).join('')+`</div>`
+    : '';
+  el.innerHTML=`<div class="chat-scroll" id="chatScroll">${bubbles}</div>
+    ${starters}
+    <div class="chat-input">
+      <textarea id="chatBox" rows="1" placeholder="Ask about this trip…" ${chatBusy?'disabled':''}
+        oninput="autoGrow(this)" onkeydown="chatKey(event)"></textarea>
+      <button class="chat-send" ${chatBusy?'disabled':''} onclick="sendChat()">➤</button>
+    </div>
+    <div class="chat-hint">Answers are AI estimates for ${esc(locLabel(t))}. Each question costs a fraction of a penny.</div>`;
+  const sc=$('chatScroll'); if(sc) sc.scrollTop=sc.scrollHeight;
+}
+function autoGrow(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
+function chatKey(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); } }
+async function sendChat(preset){
+  const t=currentTrip(); if(chatBusy) return;
+  let text=preset;
+  if(!text){ const box=$('chatBox'); text=box?box.value.trim():''; }
+  if(!text) return;
+  if(!t.chat) t.chat=[];
+  t.chat.push({role:'user',content:text});
+  chatBusy=true; save(); renderChat();
+  const suggestions=[];
+  Object.values(t.exploreCache||{}).forEach(list=>(list||[]).forEach(s=>suggestions.push(s.name)));
+  const sysExtra = suggestions.length ? ` Places already shortlisted for this trip: ${suggestions.slice(0,12).join('; ')}. If the traveller refers to a suggestion, use this list.` : '';
+  const system=`You are a warm, knowledgeable local travel guide helping with one specific trip. ${tripContext(t)}${sysExtra}
+Answer concisely and practically, with specific local detail. Prices in GBP where money comes up. If you are unsure, say so rather than inventing specifics. Keep replies to a few short paragraphs at most.`;
+  const messages=t.chat.map(m=>({role:m.role,content:m.content}));
+  try{
+    const reply=await callClaude({system,messages,max_tokens:900});
+    t.chat.push({role:'assistant',content:reply.trim()});
+  }catch(e){
+    const msg = String(e.message)==='NOKEY'
+      ? 'Add an API key under Settings to use chat.'
+      : 'Could not reach the AI — check your connection and that your key has credit.';
+    t.chat.push({role:'assistant',content:msg});
+  }
+  chatBusy=false; save(); renderChat();
+}
+function clearChat(){
+  const t=currentTrip(); if(!t.chat||!t.chat.length) return;
+  if(!confirm('Clear this trip chat?')) return;
+  t.chat=[]; save(); renderChat();
 }
 
 /* ================= settings & backup ================= */
