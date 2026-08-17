@@ -204,6 +204,36 @@
       </div>
     </div>
     <div class="status" id="statusLine">loading</div>
+    <div class="status" id="versionLine" style="margin-top:4px;"></div>
+  </div>
+
+  <!-- ============ PROFILE SETUP ============ -->
+  <div class="screen" id="profileScreen">
+    <div class="masthead">
+      <h1>Quick profile</h1>
+      <div class="meta">One minute, then you're set</div>
+    </div>
+    <div style="height:16px"></div>
+    <div class="card">
+      <div style="font-size:13px;line-height:1.5;opacity:.7;margin-bottom:12px;">
+        This stays on your device. Your home address is used to work out journeys from home,
+        and your preferred currency is what every total is converted into.
+      </div>
+      <div class="field"><label>Your name *</label><input id="pf_name" placeholder="e.g. Richard"></div>
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin:14px 0 7px;">Home address</div>
+      <div class="row2">
+        <div class="field"><label>Country</label><select id="pf_country" onchange="pfCountryPick()"></select></div>
+        <div class="field"><label>City</label><select id="pf_city"></select></div>
+      </div>
+      <div class="field" id="pf_countryOtherWrap" style="display:none;"><label>Country name</label><input id="pf_countryOther" oninput="pfCountryPick(true)"></div>
+      <div class="field" id="pf_cityOtherWrap" style="display:none;"><label>City name</label><input id="pf_cityOther"></div>
+      <div class="field"><label>Street</label><input id="pf_street" placeholder="e.g. 12 High Street"></div>
+      <div class="field"><label>Postcode</label><input id="pf_postcode" placeholder="e.g. W3 6AB"></div>
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin:14px 0 7px;">Money</div>
+      <div class="field"><label>Preferred currency *</label><select id="pf_currency"></select></div>
+      <div class="notice" style="margin-top:0">All trip costs are converted into this currency for totals, whatever currency you enter them in.</div>
+      <button class="btn btn-brass" onclick="saveProfile(true)">Save and start planning</button>
+    </div>
   </div>
 
   <!-- ============ WORLD MAP ============ -->
@@ -244,6 +274,22 @@
       <div class="meta" id="dataSize">—</div>
     </div>
     <div style="height:16px"></div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:4px;">Your profile</div>
+      <div id="profileSummary" style="font-size:13px;line-height:1.6;opacity:.75;margin-bottom:10px;"></div>
+      <button class="btn btn-ghost" onclick="fillProfileForm();showProfileView()">Edit profile</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:4px;">Exchange rates</div>
+      <div style="font-size:13px;line-height:1.5;opacity:.7;margin-bottom:10px;">
+        These are offline approximations, not live rates. Edit any you care about — the value is
+        how much <b>one unit</b> is worth in <span id="rateHome">GBP</span>.
+      </div>
+      <div id="ratesList"></div>
+      <button class="btn btn-ghost" onclick="resetRates()">Reset to defaults</button>
+    </div>
 
     <div class="card">
       <div class="card-title" style="margin-bottom:4px;">Back up your trips</div>
@@ -422,22 +468,78 @@ const COORDS = {
 };
 /* Coarse world outlines as [lon,lat] rings — plotted equirectangular */
 const LAND = [
-[[10,37],[20,32],[25,32],[32,31],[35,24],[38,18],[43,12],[51,12],[43,3],[41,-2],[40,-10],[35,-19],[33,-26],[27,-34],[20,-35],[18,-30],[14,-22],[12,-16],[9,-1],[9,4],[3,6],[-5,5],[-13,9],[-17,15],[-16,22],[-10,29],[-6,35],[0,36]],
-[[-9,43],[-2,48],[2,51],[8,54],[10,58],[5,59],[10,64],[15,69],[22,71],[30,71],[40,68],[55,70],[70,73],[80,74],[95,78],[110,76],[125,73],[140,73],[160,70],[170,69],[180,65],[175,62],[165,60],[160,55],[155,50],[143,45],[135,43],[130,38],[122,39],[120,35],[122,30],[118,24],[110,21],[105,10],[104,1],[100,6],[98,12],[95,16],[90,22],[88,21],[80,15],[77,8],[73,15],[70,22],[65,25],[60,25],[57,25],[56,26],[54,17],[48,13],[43,13],[39,21],[35,28],[34,31],[36,36],[30,40],[27,40],[24,40],[20,42],[18,42],[13,45],[12,44],[15,40],[16,38],[12,38],[10,43],[7,44],[3,43],[-1,39],[-6,37],[-9,37]],
-[[-168,66],[-160,71],[-150,70],[-135,69],[-125,70],[-115,73],[-100,70],[-95,73],[-85,73],[-80,78],[-70,82],[-60,76],[-55,70],[-65,62],[-78,62],[-80,55],[-70,50],[-60,47],[-66,44],[-70,42],[-74,40],[-76,35],[-81,31],[-80,25],[-85,30],[-90,29],[-95,29],[-97,26],[-95,18],[-92,15],[-87,13],[-83,9],[-79,9],[-83,15],[-90,20],[-97,22],[-105,20],[-110,24],[-114,30],[-117,33],[-122,37],[-124,42],[-124,48],[-130,54],[-140,60],[-150,60],[-155,58],[-165,60]],
-[[-79,9],[-72,12],[-64,11],[-60,8],[-52,5],[-50,0],[-44,-2],[-38,-5],[-35,-8],[-39,-13],[-40,-20],[-48,-25],[-53,-33],[-57,-38],[-62,-40],[-65,-45],[-68,-50],[-69,-55],[-74,-52],[-73,-45],[-73,-37],[-71,-30],[-70,-20],[-71,-15],[-77,-12],[-81,-5],[-80,0],[-77,7]],
-[[113,-22],[114,-26],[116,-32],[121,-34],[129,-32],[135,-35],[138,-35],[141,-38],[146,-39],[150,-37],[153,-28],[153,-25],[146,-19],[142,-11],[136,-12],[130,-11],[125,-14],[122,-18]],
-[[-45,60],[-30,68],[-22,70],[-20,76],[-30,83],[-45,83],[-58,82],[-70,78],[-55,68],[-50,62]],
-[[-5,50],[-3,51],[1,51],[0,53],[-1,54],[-3,58],[-5,58],[-6,55],[-5,53]],
-[[-10,52],[-6,52],[-6,55],[-8,55],[-10,54]],
-[[-24,65],[-14,65],[-13,66],[-18,66.5],[-22,66]],
-[[130,31],[135,34],[140,36],[142,42],[145,44],[141,45],[139,38],[135,35],[132,34]],
-[[43,-12],[50,-15],[50,-25],[45,-25],[43,-18]],
-[[172,-34],[178,-38],[177,-40],[174,-41],[171,-44],[167,-46],[166,-45],[170,-43],[173,-40]],
-[[95,5],[105,-6],[115,-9],[125,-9],[130,-8],[120,-4],[110,-3],[100,0]],
-[[120,18],[124,18],[126,13],[126,7],[122,6],[120,12]],
-[[80,10],[82,8],[81,6],[80,7]],
-[[-85,22],[-78,21],[-74,20],[-77,23],[-84,23]]
+/* Africa */
+[[10,37],[11,34],[15,32],[20,32],[25,32],[29,31],[32,31],[34,28],[35,24],[37,21],[38,18],[40,15],[43,12],[47,11],[51,12],[51,10],[48,5],[44,5],[43,3],[41,-2],[40,-7],[40,-10],[39,-14],[35,-19],[33,-22],[33,-26],[31,-30],[27,-34],[22,-35],[20,-35],[18,-33],[18,-30],[15,-27],[14,-22],[12,-17],[12,-13],[13,-9],[12,-6],[9,-1],[9,4],[6,4],[3,6],[0,6],[-5,5],[-8,4],[-11,7],[-13,9],[-15,12],[-17,15],[-17,19],[-16,22],[-13,25],[-10,29],[-8,33],[-6,35],[-2,36],[0,36]],
+/* Eurasia */
+[[-9,43],[-6,44],[-2,48],[-1,49],[2,51],[4,52],[8,54],[10,58],[7,58],[5,59],[8,63],[10,64],[13,67],[15,69],[19,70],[22,71],[26,71],[30,71],[35,70],[40,68],[45,68],[50,69],[55,70],[60,70],[65,72],[70,73],[75,73],[80,74],[88,76],[95,78],[103,77],[110,76],[118,75],[125,73],[133,74],[140,73],[150,72],[160,70],[170,69],[180,65],[175,62],[170,61],[165,60],[162,58],[160,55],[157,52],[155,50],[150,48],[143,45],[138,44],[135,43],[132,41],[130,38],[126,37],[122,39],[121,37],[120,35],[121,32],[122,30],[121,27],[118,24],[115,22],[110,21],[108,16],[106,10],[105,9],[104,1],[102,3],[100,6],[99,9],[98,12],[97,14],[95,16],[93,19],[90,22],[88,21],[85,20],[80,15],[78,10],[77,8],[75,11],[73,15],[72,19],[70,22],[68,24],[65,25],[62,25],[60,25],[57,25],[56,26],[57,22],[55,20],[54,17],[52,15],[48,13],[45,12],[43,13],[41,16],[39,21],[37,24],[35,28],[34,31],[36,36],[33,36],[30,40],[29,41],[27,40],[24,40],[23,38],[21,39],[20,42],[18,42],[15,44],[13,45],[12,44],[14,42],[16,40],[16,38],[15,38],[12,38],[10,44],[10,43],[8,44],[7,44],[4,43],[3,43],[0,40],[-1,39],[-4,37],[-6,37],[-9,37]],
+/* North America */
+[[-168,66],[-164,68],[-160,71],[-155,71],[-150,70],[-143,70],[-135,69],[-128,70],[-125,70],[-120,72],[-115,73],[-108,69],[-100,70],[-97,72],[-95,73],[-90,72],[-85,73],[-82,75],[-80,78],[-75,80],[-70,82],[-65,79],[-60,76],[-57,73],[-55,70],[-60,66],[-65,62],[-72,63],[-78,62],[-79,58],[-80,55],[-77,52],[-70,50],[-64,50],[-60,47],[-64,46],[-66,44],[-68,44],[-70,42],[-72,41],[-74,40],[-75,38],[-76,35],[-79,33],[-81,31],[-80,27],[-80,25],[-82,27],[-83,29],[-85,30],[-88,30],[-90,29],[-93,29],[-95,29],[-97,26],[-97,22],[-95,18],[-94,16],[-92,15],[-89,14],[-87,13],[-84,10],[-83,9],[-79,9],[-82,12],[-83,15],[-87,16],[-90,20],[-92,21],[-97,22],[-101,21],[-105,20],[-107,23],[-110,24],[-112,27],[-114,30],[-117,33],[-120,34],[-122,37],[-124,40],[-124,42],[-124,46],[-124,48],[-127,51],[-130,54],[-134,57],[-140,60],[-145,60],[-150,60],[-152,59],[-155,58],[-160,58],[-165,60],[-166,63]],
+/* South America */
+[[-79,9],[-75,11],[-72,12],[-68,11],[-64,11],[-61,10],[-60,8],[-57,6],[-52,5],[-51,2],[-50,0],[-48,-1],[-44,-2],[-41,-3],[-38,-5],[-35,-6],[-35,-8],[-37,-11],[-39,-13],[-39,-16],[-40,-20],[-44,-23],[-48,-25],[-50,-29],[-53,-33],[-57,-35],[-57,-38],[-60,-39],[-62,-40],[-64,-42],[-65,-45],[-66,-47],[-68,-50],[-68,-53],[-69,-55],[-72,-54],[-74,-52],[-75,-49],[-73,-45],[-74,-41],[-73,-37],[-72,-33],[-71,-30],[-70,-25],[-70,-20],[-71,-18],[-71,-15],[-76,-14],[-77,-12],[-79,-8],[-81,-5],[-81,-2],[-80,0],[-78,2],[-77,7]],
+/* Australia */
+[[113,-22],[113,-24],[114,-26],[115,-30],[116,-32],[118,-34],[121,-34],[124,-33],[129,-32],[132,-32],[135,-35],[137,-33],[138,-35],[140,-38],[141,-38],[144,-38],[146,-39],[148,-38],[150,-37],[152,-32],[153,-28],[153,-25],[151,-24],[149,-21],[146,-19],[145,-15],[142,-11],[141,-13],[139,-17],[137,-16],[136,-12],[133,-12],[130,-11],[129,-15],[125,-14],[124,-16],[122,-18],[121,-20],[116,-21]],
+/* Greenland */
+[[-45,60],[-42,62],[-38,65],[-33,67],[-30,68],[-25,69],[-22,70],[-21,73],[-20,76],[-24,80],[-30,83],[-38,83],[-45,83],[-52,82],[-58,82],[-65,80],[-70,78],[-62,76],[-58,72],[-55,68],[-52,65],[-50,62],[-48,61]],
+/* Great Britain */
+[[-5,50],[-4,50],[-3,51],[-1,51],[1,51],[1,52],[0,53],[-1,54],[-1,55],[-2,56],[-3,58],[-4,58],[-5,58],[-6,57],[-5,56],[-6,55],[-4,54],[-3,54],[-5,53],[-4,52],[-5,51]],
+/* Ireland */
+[[-10,52],[-8,52],[-6,52],[-6,53],[-6,55],[-7,55],[-8,55],[-10,54],[-10,53]],
+/* Iceland */
+[[-24,65],[-21,64],[-17,64],[-14,65],[-13,66],[-15,66],[-18,66],[-22,66],[-24,66]],
+/* Japan */
+[[130,31],[132,33],[135,34],[137,35],[140,36],[141,39],[142,42],[144,43],[145,44],[143,45],[141,45],[141,42],[140,39],[139,38],[137,37],[135,35],[133,35],[132,34],[131,33]],
+/* Madagascar */
+[[43,-12],[47,-13],[50,-15],[50,-19],[49,-22],[50,-25],[47,-25],[45,-25],[44,-22],[43,-18],[43,-15]],
+/* New Zealand */
+[[172,-34],[175,-36],[178,-38],[177,-40],[175,-41],[174,-41],[173,-43],[171,-44],[169,-45],[167,-46],[166,-45],[168,-44],[170,-43],[172,-41],[173,-40],[174,-38]],
+/* Sumatra */
+[[95,5],[98,3],[101,1],[104,-2],[106,-6],[105,-6],[102,-4],[99,-1],[97,2],[95,3]],
+/* Java */
+[[105,-6],[108,-6],[112,-7],[114,-8],[115,-9],[112,-8],[108,-8],[105,-7]],
+/* Borneo */
+[[109,2],[113,3],[117,4],[119,2],[118,-1],[116,-3],[113,-3],[110,-2],[109,0]],
+/* Sulawesi */
+[[119,1],[122,1],[125,1],[124,-2],[122,-4],[121,-5],[120,-3],[119,-1]],
+/* New Guinea */
+[[131,-1],[136,-2],[141,-3],[145,-5],[148,-9],[146,-8],[143,-8],[139,-8],[136,-5],[133,-3]],
+/* Philippines */
+[[120,18],[122,18],[124,18],[125,15],[126,13],[126,10],[126,7],[124,6],[122,6],[120,10],[120,12],[119,15]],
+/* Sri Lanka */
+[[80,10],[82,8],[82,7],[81,6],[80,7],[80,9]],
+/* Cuba */
+[[-85,22],[-81,23],[-78,21],[-75,20],[-74,20],[-77,22],[-80,23],[-84,23]],
+/* Hispaniola */
+[[-74,19],[-71,20],[-69,19],[-68,18],[-71,18],[-74,18]],
+/* Sicily */
+[[12,38],[15,38],[15,37],[13,37]],
+/* Sardinia */
+[[8,41],[10,41],[9,39],[8,39]],
+/* Corsica */
+[[9,43],[9,42],[9,41],[8,42]],
+/* Crete */
+[[24,35],[26,35],[26,35.5],[24,35.5]],
+/* Cyprus */
+[[32,35],[34,35],[34,35.5],[32,35.5]],
+/* Taiwan */
+[[120,25],[122,25],[121,22],[120,23]],
+/* Tasmania */
+[[145,-41],[148,-41],[148,-43],[146,-43]],
+/* Newfoundland */
+[[-59,48],[-56,47],[-53,47],[-53,50],[-56,51],[-58,50]],
+/* Vancouver Island */
+[[-128,51],[-125,50],[-123,48],[-126,49]],
+/* Svalbard */
+[[11,77],[20,78],[21,80],[15,80],[11,79]],
+/* Novaya Zemlya */
+[[52,71],[57,73],[62,76],[59,76],[54,73]],
+/* Canary Islands */
+[[-18,28],[-14,28],[-14,29],[-18,29]],
+/* Balearics */
+[[1,39],[4,40],[3,40],[1,40]],
+/* Sakhalin */
+[[142,46],[144,49],[143,54],[141,52],[141,48]],
+/* Hainan */
+[[109,20],[111,20],[110,18],[109,19]]
 ];
 const OTHER = "Other — type it in";
 const CATEGORIES = ['Flights','Transport','Accommodation','Food','Activities','Shopping','Other'];
@@ -445,6 +547,7 @@ const MAX_TRIPS_PER_YEAR = 12;
 const MW = 1000, MH = 500;
 const DB_KEY = 'tripplanner_offline_v1';
 const KEY_KEY = 'tripplanner_apikey';
+const APP_VERSION = 'v6 · 17 Aug 2026 · profile + currencies';
 let apiKey = '';
 const MAX_STOPS = 5;
 const CATCOLORS = {Travel:'#2F6F62',Accommodation:'#C9A227',Food:'#E8613C',Transport:'#4A7BA6',Activities:'#8A5DA6',Shopping:'#C25E8B',Other:'#7A8699',Flights:'#2F6F62'};
@@ -460,7 +563,69 @@ let currentTripId = null, saveTimer = null;
 const $ = id => document.getElementById(id);
 const uid = () => Math.random().toString(36).slice(2,10);
 const esc = s => !s ? '' : String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const money = n => '£' + (Number(n)||0).toLocaleString(undefined,{maximumFractionDigits:0});
+const CURRENCIES={
+GBP:{sym:'£',name:'British Pound',rate:1},
+EUR:{sym:'€',name:'Euro',rate:0.85},
+USD:{sym:'$',name:'US Dollar',rate:0.79},
+BRL:{sym:'R$',name:'Brazilian Real',rate:0.14},
+JPY:{sym:'¥',name:'Japanese Yen',rate:0.0052},
+CHF:{sym:'Fr',name:'Swiss Franc',rate:0.89},
+AUD:{sym:'A$',name:'Australian Dollar',rate:0.52},
+CAD:{sym:'C$',name:'Canadian Dollar',rate:0.57},
+NZD:{sym:'NZ$',name:'NZ Dollar',rate:0.47},
+SEK:{sym:'kr',name:'Swedish Krona',rate:0.075},
+NOK:{sym:'kr',name:'Norwegian Krone',rate:0.073},
+DKK:{sym:'kr',name:'Danish Krone',rate:0.114},
+ISK:{sym:'kr',name:'Icelandic Krona',rate:0.0057},
+PLN:{sym:'zł',name:'Polish Zloty',rate:0.20},
+CZK:{sym:'Kč',name:'Czech Koruna',rate:0.034},
+HUF:{sym:'Ft',name:'Hungarian Forint',rate:0.0022},
+TRY:{sym:'₺',name:'Turkish Lira',rate:0.020},
+ALL:{sym:'L',name:'Albanian Lek',rate:0.0085},
+MAD:{sym:'DH',name:'Moroccan Dirham',rate:0.079},
+EGP:{sym:'E£',name:'Egyptian Pound',rate:0.016},
+ZAR:{sym:'R',name:'South African Rand',rate:0.043},
+AED:{sym:'AED',name:'UAE Dirham',rate:0.215},
+THB:{sym:'฿',name:'Thai Baht',rate:0.023},
+VND:{sym:'₫',name:'Vietnamese Dong',rate:0.000030},
+IDR:{sym:'Rp',name:'Indonesian Rupiah',rate:0.000048},
+SGD:{sym:'S$',name:'Singapore Dollar',rate:0.59},
+INR:{sym:'₹',name:'Indian Rupee',rate:0.0092},
+CNY:{sym:'¥',name:'Chinese Yuan',rate:0.11},
+MXN:{sym:'MX$',name:'Mexican Peso',rate:0.042},
+ARS:{sym:'AR$',name:'Argentine Peso',rate:0.00060},
+PEN:{sym:'S/',name:'Peruvian Sol',rate:0.21},
+CLP:{sym:'CL$',name:'Chilean Peso',rate:0.00082},
+COP:{sym:'CO$',name:'Colombian Peso',rate:0.00019}
+};
+const CUR_CODES=Object.keys(CURRENCIES);
+function rateOf(code){
+  if(store.rates && store.rates[code]!=null && !isNaN(store.rates[code])) return Number(store.rates[code]);
+  return (CURRENCIES[code]||CURRENCIES.GBP).rate;
+}
+function symOf(code){ return (CURRENCIES[code]||CURRENCIES.GBP).sym; }
+function homeCur(){
+  const p=store.profile;
+  return (p && p.currency && CURRENCIES[p.currency]) ? p.currency : 'GBP';
+}
+/* convert an amount in `from` currency into the profile currency */
+function toHome(amount,from,home){
+  const a=Number(amount)||0;
+  const target=home||homeCur();
+  if(!from||from===target) return a;
+  return a*rateOf(from)/rateOf(target);
+}
+function fmtCur(n,code){
+  const v=Number(n)||0;
+  const dp = Math.abs(v)>=1000 ? 0 : (Math.abs(v)>=100?0:(v%1?2:0));
+  return symOf(code)+v.toLocaleString(undefined,{maximumFractionDigits:dp});
+}
+/* money() formats in the profile's preferred currency */
+const money = n => fmtCur(n, homeCur());
+function curSelect(cur,onchange){
+  return `<select onchange="${onchange}">`+CUR_CODES.map(c=>
+    `<option value="${c}" ${cur===c?'selected':''}>${c}</option>`).join('')+`</select>`;
+}
 const num = v => Number(v)||0;
 function currentTrip(){ return store.trips.find(t=>t.id===currentTripId); }
 
@@ -469,10 +634,74 @@ async function loadStore(){
   try{ const r=localStorage.getItem(DB_KEY); if(r) store=JSON.parse(r); }catch(e){}
   try{ apiKey = localStorage.getItem(KEY_KEY) || ''; }catch(e){ apiKey=''; }
   if(!store.trips) store.trips=[];
+  if(!store.rates) store.rates={};
   store.trips.forEach(migrateTrip);
   ntLocs=[{country:'',city:''}];
   renderLocs('new');
+  buildProfileSelects();
+  const vl=$('versionLine'); if(vl) vl.textContent=APP_VERSION;
+  if(!store.profile || !store.profile.name){
+    fillProfileForm(); showProfileView(); setStatus('');
+    return;
+  }
   renderTrips(); setStatus('saved on this device');
+}
+function buildProfileSelects(){
+  const countries=Object.keys(PLACES).sort();
+  const p=store.profile||{};
+  const known=countries.includes(p.country);
+  $('pf_country').innerHTML='<option value="">Select country…</option>'+
+    countries.map(c=>`<option ${p.country===c?'selected':''}>${esc(c)}</option>`).join('')+
+    `<option value="__other" ${p.country&&!known?'selected':''}>${OTHER}</option>`;
+  $('pf_currency').innerHTML=CUR_CODES.map(c=>
+    `<option value="${c}" ${((p.currency||'GBP')===c)?'selected':''}>${c} — ${CURRENCIES[c].name}</option>`).join('');
+  pfCountryPick();
+}
+function pfCountryPick(keepText){
+  const v=$('pf_country').value;
+  const isOther=v==='__other';
+  $('pf_countryOtherWrap').style.display=isOther?'block':'none';
+  const country=isOther?$('pf_countryOther').value.trim():v;
+  const list=PLACES[country]||[];
+  const p=store.profile||{};
+  const sel=$('pf_city');
+  if(list.length){
+    const known=list.includes(p.city);
+    sel.innerHTML='<option value="">Select city…</option>'+
+      list.map(c=>`<option ${p.city===c?'selected':''}>${esc(c)}</option>`).join('')+
+      `<option value="__other" ${p.city&&!known?'selected':''}>${OTHER}</option>`;
+  } else { sel.innerHTML=`<option value="__other" selected>${OTHER}</option>`; }
+  const cityOther=sel.value==='__other';
+  $('pf_cityOtherWrap').style.display=cityOther?'block':'none';
+  if(cityOther && p.city && !keepText) $('pf_cityOther').value=p.city;
+}
+function fillProfileForm(){
+  const p=store.profile||{};
+  $('pf_name').value=p.name||'';
+  $('pf_street').value=p.street||'';
+  $('pf_postcode').value=p.postcode||'';
+  if(p.country && !PLACES[p.country]) $('pf_countryOther').value=p.country;
+  if(p.city) $('pf_cityOther').value=p.city;
+  buildProfileSelects();
+}
+function saveProfile(firstRun){
+  const name=$('pf_name').value.trim();
+  if(!name){ alert('Please add your name.'); return; }
+  const cSel=$('pf_country').value;
+  const country=cSel==='__other'?$('pf_countryOther').value.trim():cSel;
+  const citySel=$('pf_city').value;
+  const city=citySel==='__other'?$('pf_cityOther').value.trim():citySel;
+  store.profile={name,country,city,
+    street:$('pf_street').value.trim(),
+    postcode:$('pf_postcode').value.trim(),
+    currency:$('pf_currency').value||'GBP'};
+  save();
+  if(firstRun){ showTripsView(); }
+  else { alert('Profile saved. Totals now show in '+store.profile.currency+'.'); renderSettings(); }
+}
+function homeAddress(){
+  const p=store.profile||{};
+  return [p.street,p.city,p.postcode,p.country].filter(Boolean).join(', ');
 }
 function migrateTrip(t){
   if(!Array.isArray(t.locations) || !t.locations.length){
@@ -484,6 +713,10 @@ function migrateTrip(t){
   if(!t.explorePrefs) t.explorePrefs = {tags:[], other:''};
   if(Array.isArray(t.exploreCache)) t.exploreCache = {0:t.exploreCache};
   if(t.exploreCache==null) t.exploreCache = {};
+  const hc=homeCur();
+  (t.travel||[]).forEach(b=>{ if(!b.cur) b.cur=hc; });
+  (t.stays||[]).forEach(s=>{ if(!s.cur) s.cur=hc; });
+  (t.expenses||[]).forEach(e=>{ if(!e.cur) e.cur=hc; if(e.date===undefined) e.date=''; });
 }
 function save(){
   setStatus('saving');
@@ -682,7 +915,8 @@ function createTrip(){
 }
 
 /* ================= navigation ================= */
-function hideAll(){ ['tripsScreen','mapScreen','settingsScreen','tripScreen'].forEach(i=>$(i).classList.remove('active')); }
+function hideAll(){ ['tripsScreen','mapScreen','settingsScreen','tripScreen','profileScreen'].forEach(i=>$(i).classList.remove('active')); }
+function showProfileView(){ hideAll(); $('profileScreen').classList.add('active'); window.scrollTo(0,0); }
 function showTripsView(){ hideAll(); $('tripsScreen').classList.add('active'); window.scrollTo(0,0); renderTrips(); }
 function showMapView(){ hideAll(); $('mapScreen').classList.add('active'); window.scrollTo(0,0); renderMap(); }
 function showSettingsView(){ hideAll(); $('settingsScreen').classList.add('active'); window.scrollTo(0,0); renderSettings(); }
@@ -731,9 +965,9 @@ function deleteTrip(){
 }
 
 /* ================= totals ================= */
-function travelTotal(t){ return (t.travel||[]).reduce((s,b)=>s+num(b.cost),0); }
-function stayTotal(t){ return (t.stays||[]).reduce((s,x)=>s+num(x.cost),0); }
-function expenseTotal(t){ return (t.expenses||[]).reduce((s,e)=>s+num(e.amount),0); }
+function travelTotal(t){ return (t.travel||[]).reduce((s,b)=>s+toHome(b.cost,b.cur),0); }
+function stayTotal(t){ return (t.stays||[]).reduce((s,x)=>s+toHome(x.cost,x.cur),0); }
+function expenseTotal(t){ return (t.expenses||[]).reduce((s,e)=>s+toHome(e.amount,e.cur),0); }
 function grandTotal(t){ return travelTotal(t)+stayTotal(t)+expenseTotal(t); }
 function tripDays(t){
   if(!t.start||!t.end) return 0;
@@ -757,14 +991,14 @@ function costByDay(t){
   const seg=days.map(()=>({}));
   const addDay=(d,k,a)=>{ const i=idx[d]; if(i==null) return false; seg[i][k]=(seg[i][k]||0)+a; return true; };
   const spread=(k,a)=>{ const per=a/days.length; for(let i=0;i<days.length;i++){ seg[i][k]=(seg[i][k]||0)+per; } };
-  (t.travel||[]).forEach(b=>{ const c=num(b.cost); if(!c) return;
+  (t.travel||[]).forEach(b=>{ const c=toHome(b.cost,b.cur); if(!c) return;
     if(b.journey==='Return'&&b.date&&b.retDate){
       if(!addDay(b.date,'Travel',c/2)) spread('Travel',c/2);
       if(!addDay(b.retDate,'Travel',c/2)) spread('Travel',c/2);
     } else if(b.date){ if(!addDay(b.date,'Travel',c)) spread('Travel',c); }
     else spread('Travel',c);
   });
-  (t.stays||[]).forEach(s=>{ const c=num(s.cost); if(!c) return;
+  (t.stays||[]).forEach(s=>{ const c=toHome(s.cost,s.cur); if(!c) return;
     if(s.checkin&&s.checkout){
       const nights=[]; let d=new Date(s.checkin+'T00:00'); const o=new Date(s.checkout+'T00:00');
       while(d<o){ nights.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); }
@@ -773,7 +1007,11 @@ function costByDay(t){
       else spread('Accommodation',c);
     } else spread('Accommodation',c);
   });
-  (t.expenses||[]).forEach(e=>{ const c=num(e.amount); if(!c) return; spread(catKey(e.cat),c); });
+  (t.expenses||[]).forEach(e=>{ const c=toHome(e.amount,e.cur); if(!c) return;
+    const k=catKey(e.cat);
+    if(e.date){ if(!addDay(e.date,k,c)) spread(k,c); }
+    else spread(k,c);
+  });
   return {days,seg};
 }
 const STACK_ORDER=['Travel','Accommodation','Food','Transport','Activities','Shopping','Other'];
@@ -852,7 +1090,7 @@ function renderSummary(){
       if(b.ref) d+='<br>Ref: '+esc(b.ref);
       if(b.retRef) d+=' · Return ref: '+esc(b.retRef);
       return `<div class="sum-item">
-        <div class="t"><span>${esc(b.mode)} · ${esc(b.journey||'One way')}${b.carrier?' · '+esc(b.carrier):''}</span><em>${b.cost?money(b.cost):''}</em></div>
+        <div class="t"><span>${esc(b.mode)} · ${esc(b.journey||'One way')}${b.carrier?' · '+esc(b.carrier):''}</span><em>${b.cost?money(toHome(b.cost,b.cur)):''}</em></div>
         <div class="d">${d}</div></div>`;
     }).join('')+`</div>`;
   }
@@ -860,7 +1098,7 @@ function renderSummary(){
   if((t.stays||[]).length){
     html+=`<div class="sum-block"><h3>Stays</h3>`+t.stays.map(s=>`
       <div class="sum-item">
-        <div class="t"><span>${esc(s.name||s.type)}</span><em>${s.cost?money(s.cost):''}</em></div>
+        <div class="t"><span>${esc(s.name||s.type)}</span><em>${s.cost?money(toHome(s.cost,s.cur)):''}</em></div>
         <div class="d">${esc(s.type)}${s.postcode?' · '+esc(s.postcode):''}
         ${s.address?'<br>'+esc(s.address):''}
         ${(s.checkin||s.checkout)?'<br>In: '+esc(s.checkin||'?')+' · Out: '+esc(s.checkout||'?'):''}
@@ -889,7 +1127,7 @@ function addTravel(){
 function updTravel(id,f,v){
   const b=currentTrip().travel.find(x=>x.id===id); b[f]=v; save();
   renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
-  if(f==='mode'||f==='journey') renderTravel();
+  if(f==='mode'||f==='journey'||f==='cur') renderTravel();
 }
 function delTravel(id){ const t=currentTrip(); t.travel=t.travel.filter(x=>x.id!==id); save(); renderTravel(); renderSummary(); renderBudget(); }
 function renderTravel(){
@@ -897,7 +1135,7 @@ function renderTravel(){
   if(!t.travel.length){ el.innerHTML='<div class="empty">No bookings yet.<br>Add flights, trains or buses.</div>'; return; }
   el.innerHTML=t.travel.map(b=>{
     const isReturn=b.journey==='Return';
-    const per=num(b.cost)&&ppl>1?`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.55;margin-top:-4px;margin-bottom:8px;">${money(num(b.cost)/ppl)} per person · covers ${ppl} travellers</div>`:'';
+    const per=toHome(b.cost,b.cur)&&ppl>1?`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.55;margin-top:-4px;margin-bottom:8px;">${money(toHome(b.cost,b.cur)/ppl)} per person · covers ${ppl} travellers</div>`:'';
     return `<div class="card">
       <div class="card-head">
         <div style="flex:1;display:flex;gap:5px;flex-wrap:wrap">
@@ -916,8 +1154,9 @@ function renderTravel(){
       </div>
       <div class="row2">
         <div class="field"><label>Carrier</label><input value="${esc(b.carrier)}" placeholder="e.g. LNER" onchange="updTravel('${b.id}','carrier',this.value)"></div>
-        <div class="field"><label>Total cost (£)</label><input type="number" value="${esc(b.cost)}" placeholder="0" oninput="updTravel('${b.id}','cost',this.value)"></div>
+        <div class="field"><label>Total cost</label><input type="number" value="${esc(b.cost)}" placeholder="0" oninput="updTravel('${b.id}','cost',this.value)"></div>
       </div>
+      <div class="field"><label>Currency</label>${curSelect(b.cur||homeCur(),`updTravel('${b.id}','cur',this.value)`)}</div>
       ${per}
       <div class="leg">
         <div class="leg-label">Outbound</div>
@@ -953,7 +1192,7 @@ function addStay(){
 function updStay(id,f,v){
   const s=currentTrip().stays.find(x=>x.id===id); s[f]=v; save();
   renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
-  if(f==='type') renderStays();
+  if(f==='type'||f==='cur') renderStays();
   if(f==='postcode'||f==='name'||f==='address') renderNearby();
 }
 function delStay(id){ const t=currentTrip(); t.stays=t.stays.filter(x=>x.id!==id); save(); renderStays(); renderSummary(); renderBudget(); renderNearby(); }
@@ -961,7 +1200,7 @@ function renderStays(){
   const t=currentTrip(); const el=$('stayList'); const ppl=travellers(t);
   if(!t.stays.length){ el.innerHTML='<div class="empty">No stays yet.<br>Add your hotel, hostel or Airbnb.</div>'; return; }
   el.innerHTML=t.stays.map(s=>{
-    const per=num(s.cost)&&ppl>1?`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.55;margin-bottom:8px;">${money(num(s.cost)/ppl)} per person</div>`:'';
+    const per=toHome(s.cost,s.cur)&&ppl>1?`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.55;margin-bottom:8px;">${money(toHome(s.cost,s.cur)/ppl)} per person</div>`:'';
     return `<div class="card">
       <div class="card-head"><div style="flex:1"><span class="tagpill brass">${esc(s.type)}</span></div>
         <button class="del" onclick="delStay('${s.id}')">✕</button></div>
@@ -975,8 +1214,9 @@ function renderStays(){
       <div class="field"><label>Address</label><textarea placeholder="Street, district" onchange="updStay('${s.id}','address',this.value)">${esc(s.address)}</textarea></div>
       <div class="row2">
         <div class="field"><label>Postcode / zip ★</label><input value="${esc(s.postcode)}" placeholder="EH1 1YZ" onchange="updStay('${s.id}','postcode',this.value)"></div>
-        <div class="field"><label>Total cost (£)</label><input type="number" value="${esc(s.cost)}" placeholder="0" oninput="updStay('${s.id}','cost',this.value)"></div>
+        <div class="field"><label>Total cost</label><input type="number" value="${esc(s.cost)}" placeholder="0" oninput="updStay('${s.id}','cost',this.value)"></div>
       </div>
+      <div class="field"><label>Currency</label>${curSelect(s.cur||homeCur(),`updStay('${s.id}','cur',this.value)`)}</div>
       ${per}
       <div class="row2">
         <div class="field"><label>Check in</label><input type="date" value="${esc(s.checkin)}" onchange="updStay('${s.id}','checkin',this.value)"></div>
@@ -988,10 +1228,14 @@ function renderStays(){
 }
 
 /* ================= budget ================= */
-function addExpense(){ currentTrip().expenses.push({id:uid(),cat:'Food',label:'',amount:''}); save(); renderBudget(); renderSummary(); }
+function addExpense(){
+  currentTrip().expenses.push({id:uid(),cat:'Food',label:'',amount:'',cur:homeCur(),date:''});
+  save(); renderBudget(); renderSummary();
+}
 function updExp(id,f,v){
   const e=currentTrip().expenses.find(x=>x.id===id); e[f]=v; save();
-  if(f==='amount'){ renderBudgetTotals(); renderBudgetBreakdown(); renderSummary(); }
+  if(f==='amount'||f==='cur'||f==='date'){ renderBudgetTotals(); renderBudgetBreakdown(); renderSummary(); }
+  if(f==='cur') renderBudget();
 }
 function delExp(id){ const t=currentTrip(); t.expenses=t.expenses.filter(x=>x.id!==id); save(); renderBudget(); renderSummary(); }
 function renderBudgetTotals(){
@@ -1005,7 +1249,7 @@ function renderBudgetTotals(){
 function renderBudgetBreakdown(){
   const t=currentTrip(); if(!t) return;
   const byCat={};
-  (t.expenses||[]).forEach(e=>{ byCat[e.cat]=(byCat[e.cat]||0)+num(e.amount); });
+  (t.expenses||[]).forEach(e=>{ byCat[e.cat]=(byCat[e.cat]||0)+toHome(e.amount,e.cur); });
   let html=`<div class="bd-row auto"><span>Travel tickets (auto)</span><span>${money(travelTotal(t))}</span></div>
             <div class="bd-row auto"><span>Accommodation (auto)</span><span>${money(stayTotal(t))}</span></div>`;
   Object.keys(byCat).forEach(c=>{ if(byCat[c]) html+=`<div class="bd-row"><span>${esc(c)}</span><span>${money(byCat[c])}</span></div>`; });
@@ -1018,15 +1262,27 @@ function renderBudget(){
   const t=currentTrip(); const el=$('expenseList');
   renderBudgetTotals(); renderBudgetBreakdown();
   if(!t.expenses.length){ el.innerHTML='<div class="empty">Travel and stay costs are pulled in automatically.<br>Add meals, local transport, anything else here.</div>'; return; }
-  el.innerHTML=t.expenses.map(e=>`
-    <div class="exp-row">
-      <select onchange="updExp('${e.id}','cat',this.value)">
-        ${CATEGORIES.map(c=>`<option ${e.cat===c?'selected':''}>${c}</option>`).join('')}
-      </select>
-      <input type="text" placeholder="Description" value="${esc(e.label)}" onchange="updExp('${e.id}','label',this.value)">
-      <input type="number" placeholder="0" value="${esc(e.amount)}" oninput="updExp('${e.id}','amount',this.value)">
-      <button class="del" onclick="delExp('${e.id}')">✕</button>
-    </div>`).join('');
+  const hc=homeCur();
+  el.innerHTML=t.expenses.map(e=>{
+    const conv=(e.cur&&e.cur!==hc&&num(e.amount))
+      ? `<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.55;margin-top:-4px;margin-bottom:8px;">= ${fmtCur(toHome(e.amount,e.cur),hc)} in ${hc}</div>` : '';
+    return `<div class="card">
+      <div class="card-head"><div style="flex:1"><span class="tagpill">${esc(e.cat)}</span></div>
+        <button class="del" onclick="delExp('${e.id}')">✕</button></div>
+      <div class="row2">
+        <div class="field"><label>Category</label><select onchange="updExp('${e.id}','cat',this.value)">
+          ${CATEGORIES.map(c=>`<option ${e.cat===c?'selected':''}>${esc(c)}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>Date</label><input type="date" value="${esc(e.date||'')}" onchange="updExp('${e.id}','date',this.value)"></div>
+      </div>
+      <div class="field"><label>Description</label><input type="text" placeholder="e.g. dinner at the harbour" value="${esc(e.label)}" onchange="updExp('${e.id}','label',this.value)"></div>
+      <div class="row2">
+        <div class="field"><label>Cost</label><input type="number" placeholder="0" value="${esc(e.amount)}" oninput="updExp('${e.id}','amount',this.value)"></div>
+        <div class="field"><label>Currency</label>${curSelect(e.cur||hc,`updExp('${e.id}','cur',this.value)`)}</div>
+      </div>
+      ${conv}
+    </div>`;
+  }).join('') + `<div class="notice">Dated expenses land on that day in the cost chart. Undated ones spread evenly across the trip.</div>`;
 }
 
 /* ================= world map ================= */
@@ -1139,8 +1395,12 @@ function tripContext(t){
   const dates=(t.start&&t.end)?`${t.start} to ${t.end} (${tripDays(t)} days)`:'dates not set';
   const stays=(t.stays||[]).filter(s=>s.name||s.postcode)
     .map(s=>`${s.name||s.type}${s.postcode?' ('+s.postcode+')':''}`).join('; ');
+  const p=store.profile||{};
   let ctx=`Trip: ${t.name||locs}. Stops: ${locs}. Dates: ${dates}. Travellers: ${ppl}.`;
   if(stays) ctx+=` Staying at: ${stays}.`;
+  const home=[p.city,p.country].filter(Boolean).join(', ');
+  if(home) ctx+=` The traveller is based in ${home}, so frame journeys and comparisons from there.`;
+  ctx+=` Give money figures in ${homeCur()}.`;
   return ctx;
 }
 function sugCards(list){
@@ -1222,7 +1482,7 @@ Suggest 6 genuinely worthwhile things to do — a mix of famous must-sees and on
 Mark the 2 strongest as top picks. Return ONLY a JSON array, no markdown, no preamble. Each object must have exactly these keys:
 "name", "type" (short category e.g. Museum, Viewpoint, Beach, Neighbourhood),
 "why" (1-2 sentences on what makes it worth it${wants?', mentioning the fit with their interests where relevant':''}),
-"cost" (entry cost in GBP per person, e.g. "Free" or "~£12"),
+"cost" (entry cost per person in ${homeCur()}, e.g. "Free" or "about 12"),
 "transport" (how to get there from the city centre, naming the actual line/bus/walk time),
 "time" (how long to allow, e.g. "2-3 hrs"),
 "toppick" (true for exactly 2 of them, false for the rest).`;
@@ -1261,7 +1521,7 @@ Favour places locals actually use over tourist traps. Name the neighbourhood in 
 Return ONLY a JSON array, no markdown, no preamble. Each object must have exactly these keys:
 "name", "type" (e.g. Restaurant, Cafe, Park, Market, Attraction),
 "why" (1-2 sentences on what it's like and what to order or see),
-"cost" (typical spend in GBP per person, e.g. "~£15 a head"),
+"cost" (typical spend per person in ${homeCur()}, e.g. "about 15 a head"),
 "transport" (walking time from the postcode, or the specific bus/metro),
 "time" (how long to allow).`;
   try{ t.nearbyCache=await askClaude(prompt); save(); renderNearby(); }
@@ -1347,6 +1607,49 @@ function renderSettings(){
   $('keyState').style.color = apiKey ? 'var(--stamp)' : 'var(--danger)';
   const bytes = new Blob([JSON.stringify(store)]).size;
   $('dataSize').textContent = store.trips.length + ' trips · ' + (bytes/1024).toFixed(1) + ' KB stored';
+  const p=store.profile||{};
+  $('profileSummary').innerHTML = p.name
+    ? `<b>${esc(p.name)}</b><br>${esc(homeAddress()||'No address set')}<br>
+       Totals shown in <b>${esc(p.currency||'GBP')}</b> — ${esc((CURRENCIES[p.currency]||CURRENCIES.GBP).name)}`
+    : 'No profile yet.';
+  renderRates();
+}
+function renderRates(){
+  const hc=homeCur();
+  $('rateHome').textContent=hc;
+  const used=new Set([hc]);
+  store.trips.forEach(t=>{
+    (t.travel||[]).forEach(b=>b.cur&&used.add(b.cur));
+    (t.stays||[]).forEach(s=>s.cur&&used.add(s.cur));
+    (t.expenses||[]).forEach(e=>e.cur&&used.add(e.cur));
+  });
+  Object.keys(store.rates||{}).forEach(c=>used.add(c));
+  const list=[...used].filter(c=>c!==hc).sort();
+  if(!list.length){
+    $('ratesList').innerHTML='<div style="font-size:13px;opacity:.5;padding:6px 0 10px;">No other currencies used yet. They appear here once you enter a cost in one.</div>';
+    return;
+  }
+  $('ratesList').innerHTML=list.map(c=>{
+    const perHome=rateOf(c)/rateOf(hc);
+    return `<div class="row2" style="align-items:flex-end">
+      <div class="field" style="flex:0 0 88px"><label>${esc(c)}</label>
+        <div style="font-size:12px;opacity:.6;padding:8px 0">1 ${esc(c)} =</div></div>
+      <div class="field"><label>in ${esc(hc)}</label>
+        <input type="number" step="any" value="${perHome}" onchange="setRate('${c}',this.value)"></div>
+    </div>`;
+  }).join('');
+}
+function setRate(code,val){
+  const v=parseFloat(val);
+  if(isNaN(v)||v<=0){ alert('Enter a positive number.'); renderRates(); return; }
+  if(!store.rates) store.rates={};
+  store.rates[code]=v*rateOf(homeCur());
+  save(); renderRates();
+  if(currentTripId) renderTripDetail();
+}
+function resetRates(){
+  if(!confirm('Reset all exchange rates to the built-in defaults?')) return;
+  store.rates={}; save(); renderRates();
 }
 function saveKey(){
   apiKey = $('setKey').value.replace(/\s+/g,'').trim();
