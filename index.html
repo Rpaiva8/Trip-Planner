@@ -46,6 +46,34 @@
 
   .tabs{display:flex;flex-wrap:wrap;gap:5px;margin-top:14px;}
   .tabbreak{flex-basis:100%;height:0;}
+  #printArea{display:none;}
+  .exp-pick{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px;margin-bottom:7px;cursor:pointer;}
+  .exp-pick input{width:19px;height:19px;accent-color:var(--stamp);flex-shrink:0;}
+  .exp-pick .nm{font-family:-apple-system,'Avenir Next',sans-serif;font-weight:700;font-size:14px;}
+  .exp-pick .sb{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;opacity:.6;margin-top:2px;}
+  @media print{
+    body{background:#fff;}
+    #app{display:none!important;}
+    #printArea{display:block!important;}
+    .pg{page-break-after:always;}
+    .pg:last-child{page-break-after:auto;}
+  }
+  .tl-day{margin-bottom:18px;}
+  .tl-dayhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;background:var(--ink);color:var(--paper);border-radius:9px;padding:9px 13px;margin-bottom:10px;}
+  .tl-dayhead .dn{font-family:-apple-system,'Avenir Next',sans-serif;font-weight:700;font-size:15px;}
+  .tl-dayhead .dd{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:var(--brass);}
+  .tl-item{display:flex;gap:10px;margin-bottom:9px;}
+  .tl-time{flex:0 0 60px;text-align:right;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;color:var(--stamp);padding-top:11px;line-height:1.35;}
+  .tl-time .to{opacity:.5;font-size:10px;display:block;}
+  .tl-rail{flex:0 0 12px;position:relative;}
+  .tl-rail::before{content:'';position:absolute;left:5px;top:0;bottom:-9px;width:2px;background:var(--line);}
+  .tl-dot{position:absolute;left:0;top:13px;width:12px;height:12px;border-radius:50%;border:2px solid var(--paper);z-index:1;}
+  .tl-card{flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0;}
+  .tl-card.est{border-style:dashed;}
+  .tl-card .tt{font-family:-apple-system,'Avenir Next',sans-serif;font-weight:700;font-size:14px;}
+  .tl-card .ts{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;opacity:.6;margin-top:3px;line-height:1.5;}
+  .tl-card .tc{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;color:var(--brass);margin-top:4px;}
+  .tl-anytime{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.45;margin:2px 0 7px 82px;}
   .savenote{text-align:center;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;color:var(--stamp);height:16px;margin-top:6px;transition:opacity .3s;}
   .tab{flex-shrink:0;padding:8px 12px;border-radius:20px;font-family:-apple-system,'Avenir Next','Segoe UI',Roboto,sans-serif;font-weight:500;font-size:13px;background:var(--paper-dim);cursor:pointer;user-select:none;white-space:nowrap;}
   .tab.active{background:var(--ink);color:var(--paper);}
@@ -180,6 +208,7 @@
     <div class="topnav">
       <div class="on" onclick="showTripsView()">Trips</div>
       <div onclick="showMapView()">Map</div>
+      <div onclick="showExportView()">Export</div>
       <div onclick="showSettingsView()">Settings</div>
     </div>
     <div class="masthead">
@@ -234,6 +263,14 @@
       <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin:14px 0 7px;">Money</div>
       <div class="field"><label>Preferred currency *</label><select id="pf_currency"></select></div>
       <div class="notice" style="margin-top:0">All trip costs are converted into this currency for totals, whatever currency you enter them in.</div>
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin:14px 0 7px;">AI answers</div>
+      <div class="field"><label>Answer length</label>
+        <select id="pf_style">
+          <option value="brief">Brief — straight to the point</option>
+          <option value="normal">Normal — a short paragraph</option>
+          <option value="detailed">Detailed — fuller explanations</option>
+        </select></div>
+      <div class="notice" style="margin-top:0">The AI only answers travel questions about your trips. Anything off-topic gets politely declined.</div>
       <button class="btn btn-brass" onclick="saveProfile(true)">Save and start planning</button>
     </div>
   </div>
@@ -243,6 +280,7 @@
     <div class="topnav">
       <div onclick="showTripsView()">Trips</div>
       <div class="on" onclick="showMapView()">Map</div>
+      <div onclick="showExportView()">Export</div>
       <div onclick="showSettingsView()">Settings</div>
     </div>
     <div class="masthead">
@@ -264,11 +302,40 @@
     <div id="mapUnplotted"></div>
   </div>
 
+  <!-- ============ EXPORT ============ -->
+  <div class="screen" id="exportScreen">
+    <div class="topnav">
+      <div onclick="showTripsView()">Trips</div>
+      <div onclick="showMapView()">Map</div>
+      <div class="on" onclick="showExportView()">Export</div>
+      <div onclick="showSettingsView()">Settings</div>
+    </div>
+    <div class="masthead">
+      <h1>Export to PDF</h1>
+      <div class="meta" id="exportMeta">—</div>
+    </div>
+    <div style="height:14px"></div>
+    <div class="card">
+      <div style="font-size:13px;line-height:1.5;opacity:.7;margin-bottom:12px;">
+        Pick the trips you want, then choose Export. Your phone's print dialog opens — choose
+        <b>Save as PDF</b> to keep a copy, or send it straight to someone.
+      </div>
+      <div style="display:flex;gap:7px;margin-bottom:10px;">
+        <button class="btn btn-ghost" style="margin:0" onclick="selectAllTrips(true)">Select all</button>
+        <button class="btn btn-ghost" style="margin:0" onclick="selectAllTrips(false)">Clear</button>
+      </div>
+      <div id="exportList"></div>
+      <button class="btn btn-brass" onclick="doExport()">Export selected</button>
+      <div class="notice">On iPhone: the share sheet appears — pinch outwards on the preview, then Share → Save to Files.</div>
+    </div>
+  </div>
+
   <!-- ============ SETTINGS ============ -->
   <div class="screen" id="settingsScreen">
     <div class="topnav">
       <div onclick="showTripsView()">Trips</div>
       <div onclick="showMapView()">Map</div>
+      <div onclick="showExportView()">Export</div>
       <div class="on" onclick="showSettingsView()">Settings</div>
     </div>
     <div class="masthead">
@@ -348,8 +415,9 @@
       <div class="tab" data-panel="p_travel">Travel</div>
       <div class="tab" data-panel="p_stay">Stays</div>
       <div class="tab" data-panel="p_acts">Activities</div>
-      <div class="tab" data-panel="p_budget">Other Costs</div>
+      <div class="tab" data-panel="p_budget">Other Expenses</div>
       <div class="tabbreak"></div>
+      <div class="tab" data-panel="p_time">Itinerary</div>
       <div class="tab" data-panel="p_explore">Explore</div>
       <div class="tab" data-panel="p_nearby">Near stay</div>
       <div class="tab" data-panel="p_chat">Ask AI</div>
@@ -405,18 +473,20 @@
         <h3 style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--stamp);margin:0 0 8px;">Breakdown</h3>
         <div id="budBreakdown"></div>
       </div>
-      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin:14px 0 8px;">Other costs</div>
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin:14px 0 8px;">Other expenses</div>
       <div id="expenseList"></div>
-      <button class="btn btn-stamp" onclick="addExpense()">+ Add cost</button>
-      <button class="btn btn-primary" onclick="saveSection('budget')">Save other costs</button>
+      <button class="btn btn-stamp" onclick="addExpense()">+ Add expense</button>
+      <button class="btn btn-primary" onclick="saveSection('budget')">Save other expenses</button>
       <div id="save_budget" class="savenote"></div>
     </div>
 
+    <div class="panel" id="p_time"><div id="timelineArea"></div></div>
     <div class="panel" id="p_explore"><div id="exploreArea"></div></div>
     <div class="panel" id="p_nearby"><div id="nearbyArea"></div></div>
     <div class="panel" id="p_chat"><div id="chatArea"></div></div>
   </div>
 </div>
+<div id="printArea"></div>
 
 <script>
 /* ================= reference data ================= */
@@ -562,12 +632,13 @@ const LAND = [
 ];
 const OTHER = "Other — type it in";
 const CATEGORIES = ['Flights','Transport','Accommodation','Food','Activities','Shopping','Other'];
+const DURATIONS=[['','—'],['30','30 min'],['60','1 hour'],['90','1½ hours'],['120','2 hours'],['180','3 hours'],['240','4 hours'],['300','Half day'],['480','Full day']];
 const ACT_CATEGORIES = ['Tour','Museum & gallery','Food & drink','Outdoors','Show & event','Sightseeing','Sport','Other'];
 const MAX_TRIPS_PER_YEAR = 12;
 const MW = 1000, MH = 500;
 const DB_KEY = 'tripplanner_offline_v1';
 const KEY_KEY = 'tripplanner_apikey';
-const APP_VERSION = 'v7 · 17 Aug 2026 · activities + save buttons';
+const APP_VERSION = 'v9 · 17 Aug 2026 · timeline + PDF export';
 let apiKey = '';
 const MAX_STOPS = 5;
 const CATCOLORS = {Travel:'#2F6F62',Accommodation:'#C9A227',Food:'#E8613C',Transport:'#4A7BA6',Activities:'#8A5DA6',Shopping:'#C25E8B',Other:'#7A8699',Flights:'#2F6F62'};
@@ -700,6 +771,7 @@ function fillProfileForm(){
   $('pf_name').value=p.name||'';
   $('pf_street').value=p.street||'';
   $('pf_postcode').value=p.postcode||'';
+  $('pf_style').value=p.answerStyle||'brief';
   if(p.country && !PLACES[p.country]) $('pf_countryOther').value=p.country;
   if(p.city) $('pf_cityOther').value=p.city;
   buildProfileSelects();
@@ -714,7 +786,8 @@ function saveProfile(firstRun){
   store.profile={name,country,city,
     street:$('pf_street').value.trim(),
     postcode:$('pf_postcode').value.trim(),
-    currency:$('pf_currency').value||'GBP'};
+    currency:$('pf_currency').value||'GBP',
+    answerStyle:$('pf_style').value||'brief'};
   save();
   if(firstRun){ showTripsView(); }
   else { alert('Profile saved. Totals now show in '+store.profile.currency+'.'); renderSettings(); }
@@ -743,7 +816,15 @@ function migrateTrip(t){
     if(e.end===undefined) e.end=e.date||'';
     delete e.date;
   });
-  (t.activities||[]).forEach(a=>{ if(!a.cur) a.cur=hc; if(a.start===undefined) a.start=''; if(a.end===undefined) a.end=''; });
+  (t.activities||[]).forEach(a=>{
+    if(!a.cur) a.cur=hc;
+    if(a.start===undefined) a.start='';
+    if(a.end===undefined) a.end='';
+    if(a.startTime===undefined) a.startTime='';
+    if(a.endTime===undefined) a.endTime='';
+    if(a.dur===undefined) a.dur='';
+  });
+  (t.stays||[]).forEach(x=>{ if(x.inTime===undefined) x.inTime=''; if(x.outTime===undefined) x.outTime=''; });
 }
 function save(){
   setStatus('saving');
@@ -954,7 +1035,7 @@ function createTrip(){
 }
 
 /* ================= navigation ================= */
-function hideAll(){ ['tripsScreen','mapScreen','settingsScreen','tripScreen','profileScreen'].forEach(i=>$(i).classList.remove('active')); }
+function hideAll(){ ['tripsScreen','mapScreen','settingsScreen','tripScreen','profileScreen','exportScreen'].forEach(i=>$(i).classList.remove('active')); }
 function showProfileView(){ hideAll(); $('profileScreen').classList.add('active'); window.scrollTo(0,0); }
 function showTripsView(){ hideAll(); $('tripsScreen').classList.add('active'); window.scrollTo(0,0); renderTrips(); }
 function showMapView(){ hideAll(); $('mapScreen').classList.add('active'); window.scrollTo(0,0); renderMap(); }
@@ -989,7 +1070,7 @@ function renderTripDetail(){
   $('ed_end').value=t.end||''; $('ed_notes').value=t.notes||'';
   $('ed_travellers').value=t.travellers||1;
   renderLocs('edit');
-  renderSummary(); renderTravel(); renderStays(); renderActivities(); renderBudget(); renderExplore(); renderNearby(); renderChat();
+  renderSummary(); renderTravel(); renderStays(); renderActivities(); renderBudget(); renderTimeline(); renderExplore(); renderNearby(); renderChat();
 }
 function editTrip(field,val){
   const t=currentTrip(); if(!t) return;
@@ -1175,7 +1256,7 @@ function renderSummary(){
     <div class="sum-line"><span class="k">Travel tickets</span><span class="v">${money(travelTotal(t))}</span></div>
     <div class="sum-line"><span class="k">Accommodation</span><span class="v">${money(stayTotal(t))}</span></div>
     <div class="sum-line"><span class="k">Activities</span><span class="v">${money(activityTotal(t))}</span></div>
-    <div class="sum-line"><span class="k">Other costs</span><span class="v">${money(expenseTotal(t))}</span></div>
+    <div class="sum-line"><span class="k">Other expenses</span><span class="v">${money(expenseTotal(t))}</span></div>
     <div class="sum-line" style="font-weight:600"><span class="k">Total</span><span class="v">${money(total)}</span></div>
     ${ppl>1?`<div class="sum-line" style="color:var(--stamp)"><span class="k">Each</span><span class="v">${money(total/ppl)}</span></div>`:''}
   </div>`;
@@ -1192,7 +1273,7 @@ function addTravel(){
 }
 function updTravel(id,f,v){
   const b=currentTrip().travel.find(x=>x.id===id); b[f]=v; save();
-  renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
+  renderSummary(); renderBudgetTotals(); renderBudgetBreakdown(); renderTimeline();
   if(f==='mode'||f==='journey'||f==='cur') renderTravel();
 }
 function delTravel(id){ const t=currentTrip(); t.travel=t.travel.filter(x=>x.id!==id); save(); renderTravel(); renderSummary(); renderBudget(); }
@@ -1252,12 +1333,12 @@ function renderTravel(){
 
 /* ================= stays ================= */
 function addStay(){
-  currentTrip().stays.push({id:uid(),type:'Hotel',name:'',address:'',postcode:'',ref:'',checkin:'',checkout:'',cost:'',notes:''});
+  currentTrip().stays.push({id:uid(),type:'Hotel',name:'',address:'',postcode:'',ref:'',checkin:'',checkout:'',inTime:'',outTime:'',cost:'',cur:homeCur(),notes:''});
   save(); renderStays(); renderSummary(); renderBudget(); renderNearby();
 }
 function updStay(id,f,v){
   const s=currentTrip().stays.find(x=>x.id===id); s[f]=v; save();
-  renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
+  renderSummary(); renderBudgetTotals(); renderBudgetBreakdown(); renderTimeline();
   if(f==='type'||f==='cur') renderStays();
   if(f==='postcode'||f==='name'||f==='address') renderNearby();
 }
@@ -1288,26 +1369,292 @@ function renderStays(){
         <div class="field"><label>Check in</label><input type="date" value="${esc(s.checkin)}" onchange="updStay('${s.id}','checkin',this.value)"></div>
         <div class="field"><label>Check out</label><input type="date" value="${esc(s.checkout)}" onchange="updStay('${s.id}','checkout',this.value)"></div>
       </div>
+      <div class="row2">
+        <div class="field"><label>Check-in time</label><input type="time" value="${esc(s.inTime||'')}" onchange="updStay('${s.id}','inTime',this.value)"></div>
+        <div class="field"><label>Check-out time</label><input type="time" value="${esc(s.outTime||'')}" onchange="updStay('${s.id}','outTime',this.value)"></div>
+      </div>
       <div class="field"><label>Check-in instructions</label><textarea placeholder="From 15:00, key box code, contact number" onchange="updStay('${s.id}','notes',this.value)">${esc(s.notes)}</textarea></div>
     </div>`;
   }).join('')+`<div class="notice">★ The postcode drives the "Near stay" suggestions — the more exact it is, the better the results.</div>`;
+}
+
+/* ================= PDF export ================= */
+let exportSel={};
+function showExportView(){ hideAll(); $('exportScreen').classList.add('active'); window.scrollTo(0,0); renderExportList(); }
+function renderExportList(){
+  const el=$('exportList');
+  $('exportMeta').textContent=store.trips.length+(store.trips.length===1?' trip available':' trips available');
+  if(!store.trips.length){ el.innerHTML='<div class="empty">No trips to export yet.</div>'; return; }
+  const sorted=[...store.trips].sort((a,b)=>(a.start||'9999').localeCompare(b.start||'9999'));
+  el.innerHTML=sorted.map(t=>`
+    <label class="exp-pick">
+      <input type="checkbox" ${exportSel[t.id]?'checked':''} onchange="toggleExport('${t.id}',this.checked)">
+      <span style="flex:1;min-width:0">
+        <span class="nm">${esc(t.name||primaryPlace(t)||'Trip')}</span>
+        <span class="sb">${esc(locLabel(t))} · ${fmtRange(t.start,t.end)} · ${money(grandTotal(t))}</span>
+      </span>
+    </label>`).join('');
+}
+function toggleExport(id,on){ exportSel[id]=on; }
+function selectAllTrips(on){
+  exportSel={};
+  if(on) store.trips.forEach(t=>exportSel[t.id]=true);
+  renderExportList();
+}
+function pRow(k,v){ return v?`<tr><td style="padding:3px 10px 3px 0;color:#555;white-space:nowrap;vertical-align:top">${esc(k)}</td><td style="padding:3px 0">${v}</td></tr>`:''; }
+function tripToPrintHTML(t){
+  const ppl=travellers(t), days=tripDays(t), total=grandTotal(t);
+  let h=`<div class="pg" style="font-family:-apple-system,Helvetica,Arial,sans-serif;color:#111;padding:18px 4px;">
+    <div style="border-bottom:3px solid #1B2A41;padding-bottom:8px;margin-bottom:14px;">
+      <div style="font-size:23px;font-weight:700;">${esc(t.name||primaryPlace(t)||'Trip')}</div>
+      <div style="font-size:12px;color:#2F6F62;margin-top:3px;">${esc(locLabel(t))} · ${fmtRange(t.start,t.end)}</div>
+    </div>
+    <table style="font-size:12.5px;border-collapse:collapse;margin-bottom:14px;">
+      ${pRow('Travellers',String(ppl))}
+      ${pRow('Duration',days?days+' days':'')}
+      ${pRow('Total cost',money(total))}
+      ${pRow('Per person',ppl>1?money(total/ppl):'')}
+      ${pRow('Notes',t.notes?esc(t.notes):'')}
+    </table>`;
+
+  if((t.travel||[]).length){
+    h+=`<div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#2F6F62;font-weight:700;margin:14px 0 6px;">Travel</div>`;
+    t.travel.forEach(b=>{
+      h+=`<div style="border-left:3px solid #2F6F62;padding:5px 0 5px 9px;margin-bottom:7px;font-size:12.5px;">
+        <b>${esc(b.mode||'Travel')} · ${esc(b.journey||'One way')}</b>${b.carrier?' — '+esc(b.carrier):''}
+        ${b.cost?`<span style="float:right">${esc(money(toHome(b.cost,b.cur)))}</span>`:''}
+        <div style="color:#555;margin-top:2px;">${esc(b.from||'?')} → ${esc(b.to||'?')}${b.date?' · '+esc(b.date):''}${b.time?' '+esc(b.time):''}</div>
+        ${b.journey==='Return'?`<div style="color:#555;">${esc(b.to||'?')} → ${esc(b.from||'?')}${b.retDate?' · '+esc(b.retDate):''}${b.retTime?' '+esc(b.retTime):''}</div>`:''}
+        ${b.ref?`<div style="color:#555;">Ref: ${esc(b.ref)}${b.retRef?' / '+esc(b.retRef):''}</div>`:''}
+        ${b.notes?`<div style="color:#555;">${esc(b.notes)}</div>`:''}
+      </div>`;
+    });
+  }
+  if((t.stays||[]).length){
+    h+=`<div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#2F6F62;font-weight:700;margin:14px 0 6px;">Stays</div>`;
+    t.stays.forEach(x=>{
+      h+=`<div style="border-left:3px solid #C9A227;padding:5px 0 5px 9px;margin-bottom:7px;font-size:12.5px;">
+        <b>${esc(x.name||x.type)}</b> <span style="color:#777">${esc(x.type)}</span>
+        ${x.cost?`<span style="float:right">${esc(money(toHome(x.cost,x.cur)))}</span>`:''}
+        ${x.address?`<div style="color:#555;margin-top:2px;">${esc(x.address)}</div>`:''}
+        ${x.postcode?`<div style="color:#555;">${esc(x.postcode)}</div>`:''}
+        <div style="color:#555;">In: ${esc(x.checkin||'?')}${x.inTime?' '+esc(x.inTime):''} · Out: ${esc(x.checkout||'?')}${x.outTime?' '+esc(x.outTime):''}</div>
+        ${x.ref?`<div style="color:#555;">Ref: ${esc(x.ref)}</div>`:''}
+        ${x.notes?`<div style="color:#555;">${esc(x.notes)}</div>`:''}
+      </div>`;
+    });
+  }
+  if((t.activities||[]).length){
+    h+=`<div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#2F6F62;font-weight:700;margin:14px 0 6px;">Activities</div>`;
+    t.activities.forEach(a=>{
+      const when=a.start?(a.end&&a.end!==a.start?esc(a.start)+' → '+esc(a.end):esc(a.start)):'no date';
+      const tm=a.startTime?(' '+esc(a.startTime)+(a.endTime?'–'+esc(a.endTime):'')):'';
+      h+=`<div style="border-left:3px solid #8A5DA6;padding:5px 0 5px 9px;margin-bottom:7px;font-size:12.5px;">
+        <b>${esc(a.name||a.cat)}</b> <span style="color:#777">${esc(a.cat)}</span>
+        ${a.cost?`<span style="float:right">${esc(money(toHome(a.cost,a.cur)))}</span>`:''}
+        <div style="color:#555;margin-top:2px;">${when}${tm}</div>
+        ${a.desc?`<div style="color:#555;">${esc(a.desc)}</div>`:''}
+      </div>`;
+    });
+  }
+
+  const ev=timelineEvents(t);
+  if(ev.length){
+    const byDay={}; ev.forEach(e=>{(byDay[e.date]=byDay[e.date]||[]).push(e);});
+    const dates=Object.keys(byDay).sort();
+    const ts=t.start?new Date(t.start+'T00:00'):new Date(dates[0]+'T00:00');
+    h+=`<div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#2F6F62;font-weight:700;margin:16px 0 6px;">Day by day</div>`;
+    dates.forEach(d=>{
+      const dObj=new Date(d+'T00:00');
+      const dn=Math.round((dObj-ts)/86400000)+1;
+      h+=`<div style="margin-bottom:9px;font-size:12.5px;">
+        <div style="background:#1B2A41;color:#fff;padding:4px 9px;border-radius:4px;font-weight:700;">
+          ${dn>0?'Day '+dn:'Before trip'} — ${esc(dObj.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'}))}</div>`;
+      const list=byDay[d];
+      const timed=list.filter(x=>x.start!=null).sort((a,b)=>a.start-b.start);
+      const un=list.filter(x=>x.start==null);
+      [...un,...timed].forEach(e=>{
+        const tm=e.start!=null?fmtMin(e.start)+(e.end!=null&&e.end!==e.start?'–'+(e.est?'~':'')+fmtMin(e.end):''):'—';
+        h+=`<div style="display:flex;gap:9px;padding:3px 0 3px 6px;">
+          <div style="flex:0 0 78px;color:#2F6F62;font-size:11.5px;">${esc(tm)}</div>
+          <div style="flex:1"><b>${esc(e.title)}</b>${e.sub?`<div style="color:#666;font-size:11.5px;">${esc(e.sub)}</div>`:''}</div>
+          ${e.cost?`<div style="color:#8a6d1f;font-size:11.5px;">${esc(e.cost)}</div>`:''}
+        </div>`;
+      });
+      h+=`</div>`;
+    });
+  }
+
+  h+=`<div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#2F6F62;font-weight:700;margin:16px 0 6px;">Costs</div>
+    <table style="font-size:12.5px;border-collapse:collapse;width:100%;">
+      <tr><td style="padding:3px 0;color:#555">Travel tickets</td><td style="text-align:right">${money(travelTotal(t))}</td></tr>
+      <tr><td style="padding:3px 0;color:#555">Accommodation</td><td style="text-align:right">${money(stayTotal(t))}</td></tr>
+      <tr><td style="padding:3px 0;color:#555">Activities</td><td style="text-align:right">${money(activityTotal(t))}</td></tr>
+      <tr><td style="padding:3px 0;color:#555">Other expenses</td><td style="text-align:right">${money(expenseTotal(t))}</td></tr>
+      <tr style="border-top:2px solid #1B2A41;font-weight:700"><td style="padding:5px 0">Total</td><td style="text-align:right">${money(total)}</td></tr>
+      ${ppl>1?`<tr><td style="padding:3px 0;color:#2F6F62">Per person</td><td style="text-align:right;color:#2F6F62">${money(total/ppl)}</td></tr>`:''}
+    </table>`;
+
+  if((t.expenses||[]).length){
+    h+=`<div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#2F6F62;font-weight:700;margin:14px 0 6px;">Other expenses</div>
+      <table style="font-size:12.5px;border-collapse:collapse;width:100%;">`;
+    t.expenses.forEach(e=>{
+      h+=`<tr><td style="padding:3px 0;color:#555">${esc(e.cat)}${e.label?' — '+esc(e.label):''}${e.start?' ('+esc(e.start)+')':''}</td>
+      <td style="text-align:right">${money(toHome(e.amount,e.cur))}</td></tr>`;
+    });
+    h+=`</table>`;
+  }
+
+  const p=store.profile||{};
+  h+=`<div style="margin-top:20px;padding-top:8px;border-top:1px solid #ccc;font-size:10px;color:#888;">
+    ${esc(p.name||'')}${p.name?' · ':''}Generated ${new Date().toLocaleDateString('en-GB')} · amounts in ${esc(homeCur())}</div>
+  </div>`;
+  return h;
+}
+function doExport(){
+  const chosen=store.trips.filter(t=>exportSel[t.id]);
+  if(!chosen.length){ alert('Select at least one trip first.'); return; }
+  chosen.sort((a,b)=>(a.start||'9999').localeCompare(b.start||'9999'));
+  const prev=currentTripId;
+  let html='';
+  chosen.forEach(t=>{ currentTripId=t.id; html+=tripToPrintHTML(t); });
+  currentTripId=prev;
+  $('printArea').innerHTML=html;
+  setTimeout(()=>{ window.print(); },120);
+}
+
+/* ================= itinerary timeline ================= */
+const TL_COL={travel:'#2F6F62',stay:'#C9A227',act:'#8A5DA6',expense:'#7A8699'};
+function hm(t){ if(!t) return null; const p=String(t).split(':'); return (+p[0])*60+(+(p[1]||0)); }
+function fmtMin(m){
+  if(m==null) return '';
+  const h=Math.floor(m/60)%24, mi=m%60;
+  return String(h).padStart(2,'0')+':'+String(mi).padStart(2,'0');
+}
+function fmtDur(mins){
+  if(mins<60) return mins+' min';
+  const h=Math.floor(mins/60), m=mins%60;
+  return h+(m?'h'+String(m).padStart(2,'0'):' hr'+(h>1?'s':''));
+}
+/* build a list of dated events for the trip */
+function timelineEvents(t){
+  const ev=[];
+  const push=(date,start,end,kind,title,sub,cost,est)=>{
+    if(!date) return;
+    ev.push({date,start,end,kind,title,sub,cost,est});
+  };
+  (t.travel||[]).forEach(b=>{
+    const label=`${b.mode||'Travel'}: ${b.from||'?'} → ${b.to||'?'}`;
+    const sub=[b.carrier,b.ref?('Ref '+b.ref):''].filter(Boolean).join(' · ');
+    push(b.date,hm(b.time),null,'travel',label,sub,null,false);
+    if(b.journey==='Return'&&b.retDate){
+      push(b.retDate,hm(b.retTime),null,'travel',
+        `${b.mode||'Travel'}: ${b.to||'?'} → ${b.from||'?'}`,
+        [b.carrier,b.retRef?('Ref '+b.retRef):(b.ref?('Ref '+b.ref):'')].filter(Boolean).join(' · '),null,false);
+    }
+  });
+  (t.stays||[]).forEach(x=>{
+    const nm=x.name||x.type||'Stay';
+    if(x.checkin) push(x.checkin,hm(x.inTime),null,'stay','Check in: '+nm,
+      [x.postcode,x.ref?('Ref '+x.ref):''].filter(Boolean).join(' · '),null,!x.inTime);
+    if(x.checkout) push(x.checkout,hm(x.outTime),null,'stay','Check out: '+nm,x.postcode||'',null,!x.outTime);
+  });
+  (t.activities||[]).forEach(a=>{
+    if(!a.start) return;
+    const st=hm(a.startTime);
+    let en=hm(a.endTime);
+    let est=false;
+    if(st!=null&&en==null){
+      const d=Number(a.dur)||120;
+      en=st+d; est=true;
+    }
+    const days=[]; 
+    let d=new Date(a.start+'T00:00'); const o=new Date((a.end||a.start)+'T00:00');
+    if(o>=d){ while(d<=o){ days.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); } }
+    else days.push(a.start);
+    const multi=days.length>1;
+    days.forEach((day,i)=>{
+      const suffix=multi?` (day ${i+1} of ${days.length})`:'';
+      push(day, st, en, 'act', (a.name||a.cat)+suffix,
+        [a.cat, a.desc].filter(Boolean).join(' · '),
+        (i===0&&a.cost)?money(toHome(a.cost,a.cur)):null, est);
+    });
+  });
+  (t.expenses||[]).forEach(e=>{
+    if(!e.start) return;
+    if(e.end&&e.end!==e.start) return; /* ranged expenses aren't point events */
+    push(e.start,null,null,'expense',e.label||e.cat,e.cat,
+      e.amount?money(toHome(e.amount,e.cur)):null,false);
+  });
+  return ev;
+}
+function renderTimeline(){
+  const t=currentTrip(); const el=$('timelineArea');
+  const ev=timelineEvents(t);
+  if(!ev.length){
+    el.innerHTML='<div class="empty">Nothing dated yet.<br>Add dates to your travel, stays or activities and they appear here in order.</div>';
+    return;
+  }
+  const byDay={};
+  ev.forEach(e=>{ (byDay[e.date]=byDay[e.date]||[]).push(e); });
+  const dates=Object.keys(byDay).sort();
+  const tripStart=t.start?new Date(t.start+'T00:00'):new Date(dates[0]+'T00:00');
+  let html='';
+  dates.forEach(date=>{
+    const list=byDay[date];
+    const timed=list.filter(x=>x.start!=null).sort((a,b)=>a.start-b.start);
+    const untimed=list.filter(x=>x.start==null);
+    const dObj=new Date(date+'T00:00');
+    const dayNo=Math.round((dObj-tripStart)/86400000)+1;
+    const nice=dObj.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'});
+    html+=`<div class="tl-day">
+      <div class="tl-dayhead"><span class="dn">${dayNo>0?'Day '+dayNo:'Before trip'}</span><span class="dd">${esc(nice)}</span></div>`;
+    if(untimed.length){
+      html+=`<div class="tl-anytime">Anytime that day</div>`;
+      untimed.forEach(e=>{ html+=tlItem(e,false); });
+    }
+    timed.forEach(e=>{ html+=tlItem(e,true); });
+    html+=`</div>`;
+  });
+  html+=`<div class="notice">Times are optional. Items without a time sit under "Anytime that day". Where you gave a start but no end, the length is estimated and shown with a dashed border.</div>`;
+  el.innerHTML=html;
+}
+function tlItem(e,showTime){
+  const col=TL_COL[e.kind]||'#7A8699';
+  let time='';
+  if(showTime&&e.start!=null){
+    time=fmtMin(e.start);
+    if(e.end!=null&&e.end!==e.start){
+      const mins=e.end-e.start;
+      time+=`<span class="to">${e.est?'~':''}${fmtMin(e.end)}</span>`;
+    }
+  } else if(!showTime){ time='<span class="to">—</span>'; }
+  return `<div class="tl-item">
+    <div class="tl-time">${time}</div>
+    <div class="tl-rail"><div class="tl-dot" style="background:${col}"></div></div>
+    <div class="tl-card ${e.est?'est':''}">
+      <div class="tt">${esc(e.title)}</div>
+      ${e.sub?`<div class="ts">${esc(e.sub)}</div>`:''}
+      ${e.cost?`<div class="tc">${esc(e.cost)}</div>`:''}
+    </div>
+  </div>`;
 }
 
 /* ================= activities ================= */
 function addActivity(from){
   const t=currentTrip();
   t.activities.push({id:uid(),name:(from&&from.name)||'',cat:(from&&from.cat)||'Sightseeing',
-    start:'',end:'',desc:(from&&from.desc)||'',cost:'',cur:homeCur()});
-  save(); renderActivities(); renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
+    start:'',end:'',startTime:'',endTime:'',dur:'',desc:(from&&from.desc)||'',cost:'',cur:homeCur()});
+  save(); renderActivities(); renderSummary(); renderBudgetTotals(); renderBudgetBreakdown(); renderTimeline();
 }
 function updAct(id,f,v){
   const a=currentTrip().activities.find(x=>x.id===id); a[f]=v; save();
-  renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
-  if(f==='cat'||f==='cur') renderActivities();
+  renderSummary(); renderBudgetTotals(); renderBudgetBreakdown(); renderTimeline();
+  if(f==='cat'||f==='cur'||f==='startTime'||f==='endTime') renderActivities();
 }
 function delAct(id){
   const t=currentTrip(); t.activities=t.activities.filter(x=>x.id!==id);
-  save(); renderActivities(); renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
+  save(); renderActivities(); renderSummary(); renderBudgetTotals(); renderBudgetBreakdown(); renderTimeline();
 }
 function addSuggestionToActivities(locIdx,i){
   const t=currentTrip();
@@ -1339,6 +1686,15 @@ function renderActivities(){
         <div class="field"><label>Start date</label><input type="date" value="${esc(a.start)}" onchange="updAct('${a.id}','start',this.value)"></div>
         <div class="field"><label>End date</label><input type="date" value="${esc(a.end)}" onchange="updAct('${a.id}','end',this.value)"></div>
       </div>
+      <div class="row2">
+        <div class="field"><label>Start time <span style="opacity:.6">(optional)</span></label><input type="time" value="${esc(a.startTime)}" onchange="updAct('${a.id}','startTime',this.value)"></div>
+        <div class="field"><label>End time <span style="opacity:.6">(optional)</span></label><input type="time" value="${esc(a.endTime)}" onchange="updAct('${a.id}','endTime',this.value)"></div>
+      </div>
+      ${(a.startTime&&!a.endTime)?`<div class="field"><label>Roughly how long?</label>
+        <select onchange="updAct('${a.id}','dur',this.value)">
+          ${DURATIONS.map(d=>`<option value="${d[0]}" ${String(a.dur)===d[0]?'selected':''}>${d[1]}</option>`).join('')}
+        </select>
+        <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.55;margin-top:4px;">Used to place it on the timeline. Leave blank and we'll assume about 2 hours.</div></div>`:''}
       <div class="field"><label>Description</label><textarea placeholder="Booking notes, meeting point, what to bring" onchange="updAct('${a.id}','desc',this.value)">${esc(a.desc)}</textarea></div>
       <div class="row2">
         <div class="field"><label>Cost</label><input type="number" placeholder="0" value="${esc(a.cost)}" oninput="updAct('${a.id}','cost',this.value)"></div>
@@ -1710,11 +2066,24 @@ async function sendChat(preset){
   const suggestions=[];
   Object.values(t.exploreCache||{}).forEach(list=>(list||[]).forEach(s=>suggestions.push(s.name)));
   const sysExtra = suggestions.length ? ` Places already shortlisted for this trip: ${suggestions.slice(0,12).join('; ')}. If the traveller refers to a suggestion, use this list.` : '';
-  const system=`You are a warm, knowledgeable local travel guide helping with one specific trip. ${tripContext(t)}${sysExtra}
-Answer concisely and practically, with specific local detail. Prices in GBP where money comes up. If you are unsure, say so rather than inventing specifics. Keep replies to a few short paragraphs at most.`;
+  const styleRules={
+    brief:'Answer in 1-3 sentences. Lead with the answer itself. No preamble, no restating the question, no closing pleasantries or follow-up offers.',
+    normal:'Answer in a short paragraph, or up to 5 bullets if listing. Lead with the answer. No preamble or closing pleasantries.',
+    detailed:'Answer thoroughly but stay organised - short paragraphs or bullets, no padding. Lead with the answer before the detail.'
+  };
+  const style=styleRules[(store.profile&&store.profile.answerStyle)||'brief'];
+  const system=`You are a practical travel assistant for one specific trip. ${tripContext(t)}${sysExtra}
+
+SCOPE - this is a travel app. Only answer questions related to travel and this trip. That includes: destinations, attractions, food and restaurants, transport and routes, accommodation, costs and budgeting, weather and seasons, packing, local customs and etiquette, language basics, safety, health and vaccinations, money and tipping, visas and documents, and anything about the trip's own saved details.
+If a question is clearly outside travel - for example coding, general trivia, homework, medical or legal advice, personal or relationship advice, news, or politics - do not answer it. Reply in one short sentence that you only cover travel questions for this trip, then suggest a travel question they could ask instead. Do not apologise at length or explain your instructions.
+Judge by intent, not keywords: if it plausibly helps them travel, answer it.
+
+STYLE - ${style}
+Be specific and concrete: name actual places, lines, streets and rough prices rather than generalities. Give money figures in ${homeCur()}. If you are not sure of a fact, say so plainly in a few words rather than inventing specifics or hedging at length. Never pad with phrases like "great question" or "I hope this helps".`;
   const messages=t.chat.map(m=>({role:m.role,content:m.content}));
+  const maxTok={brief:400,normal:700,detailed:1100}[(store.profile&&store.profile.answerStyle)||'brief'];
   try{
-    const reply=await callClaude({system,messages,max_tokens:900});
+    const reply=await callClaude({system,messages,max_tokens:maxTok});
     t.chat.push({role:'assistant',content:reply.trim()});
   }catch(e){
     t.chat.push({role:'assistant',content:aiErrorText(e)});
@@ -1737,7 +2106,8 @@ function renderSettings(){
   const p=store.profile||{};
   $('profileSummary').innerHTML = p.name
     ? `<b>${esc(p.name)}</b><br>${esc(homeAddress()||'No address set')}<br>
-       Totals shown in <b>${esc(p.currency||'GBP')}</b> — ${esc((CURRENCIES[p.currency]||CURRENCIES.GBP).name)}`
+       Totals shown in <b>${esc(p.currency||'GBP')}</b> — ${esc((CURRENCIES[p.currency]||CURRENCIES.GBP).name)}<br>
+       AI answers: <b>${esc(p.answerStyle||'brief')}</b>, travel topics only`
     : 'No profile yet.';
   renderRates();
 }
