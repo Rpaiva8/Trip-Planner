@@ -45,6 +45,8 @@
   .pass .route{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;color:var(--brass);margin-top:5px;letter-spacing:0.05em;}
 
   .tabs{display:flex;flex-wrap:wrap;gap:5px;margin-top:14px;}
+  .tabbreak{flex-basis:100%;height:0;}
+  .savenote{text-align:center;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;color:var(--stamp);height:16px;margin-top:6px;transition:opacity .3s;}
   .tab{flex-shrink:0;padding:8px 12px;border-radius:20px;font-family:-apple-system,'Avenir Next','Segoe UI',Roboto,sans-serif;font-weight:500;font-size:13px;background:var(--paper-dim);cursor:pointer;user-select:none;white-space:nowrap;}
   .tab.active{background:var(--ink);color:var(--paper);}
   .panel{display:none;padding-top:16px;} .panel.active{display:block;}
@@ -345,7 +347,9 @@
       <div class="tab" data-panel="p_plan">Plan</div>
       <div class="tab" data-panel="p_travel">Travel</div>
       <div class="tab" data-panel="p_stay">Stays</div>
-      <div class="tab" data-panel="p_budget">Budget</div>
+      <div class="tab" data-panel="p_acts">Activities</div>
+      <div class="tab" data-panel="p_budget">Other Costs</div>
+      <div class="tabbreak"></div>
       <div class="tab" data-panel="p_explore">Explore</div>
       <div class="tab" data-panel="p_nearby">Near stay</div>
       <div class="tab" data-panel="p_chat">Ask AI</div>
@@ -365,17 +369,30 @@
         <div class="field"><label>Travellers on this trip</label><input id="ed_travellers" type="number" min="1" oninput="editTrip('travellers',this.value)"></div>
         <div class="field"><label>Notes</label><textarea id="ed_notes" oninput="editTrip('notes',this.value)" placeholder="Anything to remember"></textarea></div>
       </div>
-      <button class="btn btn-ghost" style="color:var(--danger);border-color:var(--danger);opacity:.8" onclick="deleteTrip()">Delete this trip</button>
+      <button class="btn btn-primary" onclick="saveSection('plan')">Save trip details</button>
+      <div id="save_plan" class="savenote"></div>
+      <button class="btn btn-ghost" style="color:var(--danger);border-color:var(--danger);opacity:.8;margin-top:14px" onclick="deleteTrip()">Delete this trip</button>
     </div>
 
     <div class="panel" id="p_travel">
       <div id="travelList"></div>
       <button class="btn btn-stamp" onclick="addTravel()">+ Add booking</button>
+      <button class="btn btn-primary" onclick="saveSection('travel')">Save bookings</button>
+      <div id="save_travel" class="savenote"></div>
     </div>
 
     <div class="panel" id="p_stay">
       <div id="stayList"></div>
       <button class="btn btn-stamp" onclick="addStay()">+ Add stay</button>
+      <button class="btn btn-primary" onclick="saveSection('stay')">Save stays</button>
+      <div id="save_stay" class="savenote"></div>
+    </div>
+
+    <div class="panel" id="p_acts">
+      <div id="actList"></div>
+      <button class="btn btn-stamp" onclick="addActivity()">+ Add activity</button>
+      <button class="btn btn-primary" onclick="saveSection('acts')">Save activities</button>
+      <div id="save_acts" class="savenote"></div>
     </div>
 
     <div class="panel" id="p_budget">
@@ -388,9 +405,11 @@
         <h3 style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--stamp);margin:0 0 8px;">Breakdown</h3>
         <div id="budBreakdown"></div>
       </div>
-      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin:14px 0 8px;">Other expenses</div>
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin:14px 0 8px;">Other costs</div>
       <div id="expenseList"></div>
-      <button class="btn btn-stamp" onclick="addExpense()">+ Add expense</button>
+      <button class="btn btn-stamp" onclick="addExpense()">+ Add cost</button>
+      <button class="btn btn-primary" onclick="saveSection('budget')">Save other costs</button>
+      <div id="save_budget" class="savenote"></div>
     </div>
 
     <div class="panel" id="p_explore"><div id="exploreArea"></div></div>
@@ -543,11 +562,12 @@ const LAND = [
 ];
 const OTHER = "Other — type it in";
 const CATEGORIES = ['Flights','Transport','Accommodation','Food','Activities','Shopping','Other'];
+const ACT_CATEGORIES = ['Tour','Museum & gallery','Food & drink','Outdoors','Show & event','Sightseeing','Sport','Other'];
 const MAX_TRIPS_PER_YEAR = 12;
 const MW = 1000, MH = 500;
 const DB_KEY = 'tripplanner_offline_v1';
 const KEY_KEY = 'tripplanner_apikey';
-const APP_VERSION = 'v6 · 17 Aug 2026 · profile + currencies';
+const APP_VERSION = 'v7 · 17 Aug 2026 · activities + save buttons';
 let apiKey = '';
 const MAX_STOPS = 5;
 const CATCOLORS = {Travel:'#2F6F62',Accommodation:'#C9A227',Food:'#E8613C',Transport:'#4A7BA6',Activities:'#8A5DA6',Shopping:'#C25E8B',Other:'#7A8699',Flights:'#2F6F62'};
@@ -714,9 +734,16 @@ function migrateTrip(t){
   if(Array.isArray(t.exploreCache)) t.exploreCache = {0:t.exploreCache};
   if(t.exploreCache==null) t.exploreCache = {};
   const hc=homeCur();
+  if(!Array.isArray(t.activities)) t.activities=[];
   (t.travel||[]).forEach(b=>{ if(!b.cur) b.cur=hc; });
   (t.stays||[]).forEach(s=>{ if(!s.cur) s.cur=hc; });
-  (t.expenses||[]).forEach(e=>{ if(!e.cur) e.cur=hc; if(e.date===undefined) e.date=''; });
+  (t.expenses||[]).forEach(e=>{
+    if(!e.cur) e.cur=hc;
+    if(e.start===undefined) e.start=e.date||'';
+    if(e.end===undefined) e.end=e.date||'';
+    delete e.date;
+  });
+  (t.activities||[]).forEach(a=>{ if(!a.cur) a.cur=hc; if(a.start===undefined) a.start=''; if(a.end===undefined) a.end=''; });
 }
 function save(){
   setStatus('saving');
@@ -727,6 +754,18 @@ function save(){
   },450);
 }
 function setStatus(t){ const el=$('statusLine'); if(el) el.textContent=t; }
+function saveSection(which){
+  clearTimeout(saveTimer);
+  const note=$('save_'+which);
+  try{
+    localStorage.setItem(DB_KEY,JSON.stringify(store));
+    setStatus('saved on this device');
+    if(note){ note.textContent='✓ Saved'; note.style.opacity='1';
+      setTimeout(()=>{ if(note) note.style.opacity='0'; },2200); }
+  }catch(e){
+    if(note){ note.textContent='Save failed — device storage full?'; note.style.color='var(--danger)'; note.style.opacity='1'; }
+  }
+}
 
 /* ================= dropdowns ================= */
 function buildCountrySelect(pfx, selected){
@@ -906,7 +945,7 @@ function createTrip(){
   const t={id:uid(),name:name,locations:finalLocs,
     country:finalLocs[0].country,city:finalLocs[0].city,
     start:$('nt_start').value,end:$('nt_end').value,travellers:num($('nt_travellers').value)||1,
-    notes:'',travel:[],stays:[],expenses:[],chat:[],explorePrefs:{tags:[],other:''},exploreCache:{},nearbyCache:null};
+    notes:'',travel:[],stays:[],expenses:[],activities:[],chat:[],explorePrefs:{tags:[],other:''},exploreCache:{},nearbyCache:null};
   store.trips.push(t);
   ['nt_name','nt_start','nt_end'].forEach(i=>$(i).value='');
   $('nt_travellers').value=1;
@@ -950,7 +989,7 @@ function renderTripDetail(){
   $('ed_end').value=t.end||''; $('ed_notes').value=t.notes||'';
   $('ed_travellers').value=t.travellers||1;
   renderLocs('edit');
-  renderSummary(); renderTravel(); renderStays(); renderBudget(); renderExplore(); renderNearby(); renderChat();
+  renderSummary(); renderTravel(); renderStays(); renderActivities(); renderBudget(); renderExplore(); renderNearby(); renderChat();
 }
 function editTrip(field,val){
   const t=currentTrip(); if(!t) return;
@@ -968,7 +1007,8 @@ function deleteTrip(){
 function travelTotal(t){ return (t.travel||[]).reduce((s,b)=>s+toHome(b.cost,b.cur),0); }
 function stayTotal(t){ return (t.stays||[]).reduce((s,x)=>s+toHome(x.cost,x.cur),0); }
 function expenseTotal(t){ return (t.expenses||[]).reduce((s,e)=>s+toHome(e.amount,e.cur),0); }
-function grandTotal(t){ return travelTotal(t)+stayTotal(t)+expenseTotal(t); }
+function activityTotal(t){ return (t.activities||[]).reduce((s,a)=>s+toHome(a.cost,a.cur),0); }
+function grandTotal(t){ return travelTotal(t)+stayTotal(t)+expenseTotal(t)+activityTotal(t); }
 function tripDays(t){
   if(!t.start||!t.end) return 0;
   const d=(new Date(t.end)-new Date(t.start))/86400000;
@@ -1007,11 +1047,20 @@ function costByDay(t){
       else spread('Accommodation',c);
     } else spread('Accommodation',c);
   });
-  (t.expenses||[]).forEach(e=>{ const c=toHome(e.amount,e.cur); if(!c) return;
-    const k=catKey(e.cat);
-    if(e.date){ if(!addDay(e.date,k,c)) spread(k,c); }
-    else spread(k,c);
-  });
+  const allocRange=(from,to,k,amount)=>{
+    if(!amount) return;
+    if(!from && !to){ spread(k,amount); return; }
+    const a=from||to, b=to||from;
+    let d=new Date(a+'T00:00'); const o=new Date(b+'T00:00');
+    if(o<d){ spread(k,amount); return; }
+    const span=[]; while(d<=o){ span.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); }
+    const inRange=span.filter(x=>idx[x]!=null);
+    if(!inRange.length){ spread(k,amount); return; }
+    const per=amount/inRange.length;
+    inRange.forEach(x=>addDay(x,k,per));
+  };
+  (t.expenses||[]).forEach(e=>{ allocRange(e.start,e.end,catKey(e.cat),toHome(e.amount,e.cur)); });
+  (t.activities||[]).forEach(a=>{ allocRange(a.start,a.end,'Activities',toHome(a.cost,a.cur)); });
   return {days,seg};
 }
 const STACK_ORDER=['Travel','Accommodation','Food','Transport','Activities','Shopping','Other'];
@@ -1070,6 +1119,12 @@ function renderSummary(){
       <div class="sum-stat"><div class="n">${ppl}</div><div class="l">Travellers</div></div>
       <div class="sum-stat"><div class="n">${money(total/ppl)}</div><div class="l">Per person</div></div>
       <div class="sum-stat"><div class="n">${days?money(total/days):'—'}</div><div class="l">Per day</div></div>
+    </div>
+    <div class="sum-grid">
+      <div class="sum-stat"><div class="n">${(t.travel||[]).length}</div><div class="l">Bookings</div></div>
+      <div class="sum-stat"><div class="n">${(t.stays||[]).length}</div><div class="l">Stays</div></div>
+      <div class="sum-stat"><div class="n">${(t.activities||[]).length}</div><div class="l">Activities</div></div>
+      <div class="sum-stat"><div class="n">${money(activityTotal(t))}</div><div class="l">Activity cost</div></div>
     </div>`;
 
   html+=`<div class="sum-block"><h3>Trip</h3>
@@ -1106,10 +1161,21 @@ function renderSummary(){
       </div>`).join('')+`</div>`;
   }
 
+  if((t.activities||[]).length){
+    html+=`<div class="sum-block"><h3>Activities</h3>`+t.activities.map(a=>{
+      const when = a.start ? (a.end&&a.end!==a.start ? esc(a.start)+' → '+esc(a.end) : esc(a.start)) : 'no date set';
+      return `<div class="sum-item">
+        <div class="t"><span>${esc(a.name||a.cat)}</span><em>${a.cost?money(toHome(a.cost,a.cur)):''}</em></div>
+        <div class="d">${esc(a.cat)} · ${when}${a.desc?'<br>'+esc(a.desc):''}</div>
+      </div>`;
+    }).join('')+`</div>`;
+  }
+
   html+=`<div class="sum-block"><h3>Cost breakdown</h3>
     <div class="sum-line"><span class="k">Travel tickets</span><span class="v">${money(travelTotal(t))}</span></div>
     <div class="sum-line"><span class="k">Accommodation</span><span class="v">${money(stayTotal(t))}</span></div>
-    <div class="sum-line"><span class="k">Other expenses</span><span class="v">${money(expenseTotal(t))}</span></div>
+    <div class="sum-line"><span class="k">Activities</span><span class="v">${money(activityTotal(t))}</span></div>
+    <div class="sum-line"><span class="k">Other costs</span><span class="v">${money(expenseTotal(t))}</span></div>
     <div class="sum-line" style="font-weight:600"><span class="k">Total</span><span class="v">${money(total)}</span></div>
     ${ppl>1?`<div class="sum-line" style="color:var(--stamp)"><span class="k">Each</span><span class="v">${money(total/ppl)}</span></div>`:''}
   </div>`;
@@ -1227,14 +1293,70 @@ function renderStays(){
   }).join('')+`<div class="notice">★ The postcode drives the "Near stay" suggestions — the more exact it is, the better the results.</div>`;
 }
 
+/* ================= activities ================= */
+function addActivity(from){
+  const t=currentTrip();
+  t.activities.push({id:uid(),name:(from&&from.name)||'',cat:(from&&from.cat)||'Sightseeing',
+    start:'',end:'',desc:(from&&from.desc)||'',cost:'',cur:homeCur()});
+  save(); renderActivities(); renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
+}
+function updAct(id,f,v){
+  const a=currentTrip().activities.find(x=>x.id===id); a[f]=v; save();
+  renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
+  if(f==='cat'||f==='cur') renderActivities();
+}
+function delAct(id){
+  const t=currentTrip(); t.activities=t.activities.filter(x=>x.id!==id);
+  save(); renderActivities(); renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
+}
+function addSuggestionToActivities(locIdx,i){
+  const t=currentTrip();
+  const s=((t.exploreCache||{})[locIdx]||[])[i];
+  if(!s) return;
+  addActivity({name:s.name,desc:[s.why,s.transport?('Getting there: '+s.transport):''].filter(Boolean).join(' '),cat:'Sightseeing'});
+  alert('"'+s.name+'" added to your Activities.');
+}
+function renderActivities(){
+  const t=currentTrip(); const el=$('actList'); const hc=homeCur(); const ppl=travellers(t);
+  if(!t.activities.length){
+    el.innerHTML='<div class="empty">Nothing planned yet.<br>Add tours, museums, shows — anything you want to do.</div>';
+    return;
+  }
+  el.innerHTML=t.activities.map(a=>{
+    const amt=toHome(a.cost,a.cur);
+    const conv=(a.cur&&a.cur!==hc&&num(a.cost))
+      ? `<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.55;margin-top:-4px;margin-bottom:8px;">= ${fmtCur(amt,hc)} in ${hc}${ppl>1?' · '+fmtCur(amt/ppl,hc)+' each':''}</div>`
+      : (amt&&ppl>1?`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.55;margin-top:-4px;margin-bottom:8px;">${fmtCur(amt/ppl,hc)} per person</div>`:'');
+    const span=(a.start&&a.end&&a.start!==a.end)?' · spread over the dates':'';
+    return `<div class="card">
+      <div class="card-head"><div style="flex:1"><span class="tagpill">${esc(a.cat)}</span></div>
+        <button class="del" onclick="delAct('${a.id}')">✕</button></div>
+      <div class="field"><label>Name</label><input value="${esc(a.name)}" placeholder="e.g. Edinburgh Castle" onchange="updAct('${a.id}','name',this.value)"></div>
+      <div class="field"><label>Category</label><select onchange="updAct('${a.id}','cat',this.value)">
+        ${ACT_CATEGORIES.map(c=>`<option ${a.cat===c?'selected':''}>${esc(c)}</option>`).join('')}
+      </select></div>
+      <div class="row2">
+        <div class="field"><label>Start date</label><input type="date" value="${esc(a.start)}" onchange="updAct('${a.id}','start',this.value)"></div>
+        <div class="field"><label>End date</label><input type="date" value="${esc(a.end)}" onchange="updAct('${a.id}','end',this.value)"></div>
+      </div>
+      <div class="field"><label>Description</label><textarea placeholder="Booking notes, meeting point, what to bring" onchange="updAct('${a.id}','desc',this.value)">${esc(a.desc)}</textarea></div>
+      <div class="row2">
+        <div class="field"><label>Cost</label><input type="number" placeholder="0" value="${esc(a.cost)}" oninput="updAct('${a.id}','cost',this.value)"></div>
+        <div class="field"><label>Currency</label>${curSelect(a.cur||hc,`updAct('${a.id}','cur',this.value)`)}</div>
+      </div>
+      ${conv}
+    </div>`;
+  }).join('')+`<div class="notice">One-day activity: set the same start and end date. Multi-day: the cost splits evenly across those days in the chart.</div>`;
+}
+
 /* ================= budget ================= */
 function addExpense(){
-  currentTrip().expenses.push({id:uid(),cat:'Food',label:'',amount:'',cur:homeCur(),date:''});
+  currentTrip().expenses.push({id:uid(),cat:'Food',label:'',amount:'',cur:homeCur(),start:'',end:''});
   save(); renderBudget(); renderSummary();
 }
 function updExp(id,f,v){
   const e=currentTrip().expenses.find(x=>x.id===id); e[f]=v; save();
-  if(f==='amount'||f==='cur'||f==='date'){ renderBudgetTotals(); renderBudgetBreakdown(); renderSummary(); }
+  if(f==='amount'||f==='cur'||f==='start'||f==='end'){ renderBudgetTotals(); renderBudgetBreakdown(); renderSummary(); }
   if(f==='cur') renderBudget();
 }
 function delExp(id){ const t=currentTrip(); t.expenses=t.expenses.filter(x=>x.id!==id); save(); renderBudget(); renderSummary(); }
@@ -1251,7 +1373,8 @@ function renderBudgetBreakdown(){
   const byCat={};
   (t.expenses||[]).forEach(e=>{ byCat[e.cat]=(byCat[e.cat]||0)+toHome(e.amount,e.cur); });
   let html=`<div class="bd-row auto"><span>Travel tickets (auto)</span><span>${money(travelTotal(t))}</span></div>
-            <div class="bd-row auto"><span>Accommodation (auto)</span><span>${money(stayTotal(t))}</span></div>`;
+            <div class="bd-row auto"><span>Accommodation (auto)</span><span>${money(stayTotal(t))}</span></div>
+            <div class="bd-row auto"><span>Activities (auto)</span><span>${money(activityTotal(t))}</span></div>`;
   Object.keys(byCat).forEach(c=>{ if(byCat[c]) html+=`<div class="bd-row"><span>${esc(c)}</span><span>${money(byCat[c])}</span></div>`; });
   html+=`<div class="bd-row" style="font-weight:700;color:var(--brass)"><span>TOTAL</span><span>${money(grandTotal(t))}</span></div>`;
   const ppl=travellers(t);
@@ -1261,7 +1384,7 @@ function renderBudgetBreakdown(){
 function renderBudget(){
   const t=currentTrip(); const el=$('expenseList');
   renderBudgetTotals(); renderBudgetBreakdown();
-  if(!t.expenses.length){ el.innerHTML='<div class="empty">Travel and stay costs are pulled in automatically.<br>Add meals, local transport, anything else here.</div>'; return; }
+  if(!t.expenses.length){ el.innerHTML='<div class="empty">Travel, stay and activity costs are pulled in automatically.<br>Add meals, local transport, anything else here.</div>'; return; }
   const hc=homeCur();
   el.innerHTML=t.expenses.map(e=>{
     const conv=(e.cur&&e.cur!==hc&&num(e.amount))
@@ -1273,8 +1396,9 @@ function renderBudget(){
         <div class="field"><label>Category</label><select onchange="updExp('${e.id}','cat',this.value)">
           ${CATEGORIES.map(c=>`<option ${e.cat===c?'selected':''}>${esc(c)}</option>`).join('')}
         </select></div>
-        <div class="field"><label>Date</label><input type="date" value="${esc(e.date||'')}" onchange="updExp('${e.id}','date',this.value)"></div>
+        <div class="field"><label>Start date</label><input type="date" value="${esc(e.start||'')}" onchange="updExp('${e.id}','start',this.value)"></div>
       </div>
+      <div class="field"><label>End date</label><input type="date" value="${esc(e.end||'')}" onchange="updExp('${e.id}','end',this.value)"></div>
       <div class="field"><label>Description</label><input type="text" placeholder="e.g. dinner at the harbour" value="${esc(e.label)}" onchange="updExp('${e.id}','label',this.value)"></div>
       <div class="row2">
         <div class="field"><label>Cost</label><input type="number" placeholder="0" value="${esc(e.amount)}" oninput="updExp('${e.id}','amount',this.value)"></div>
@@ -1282,7 +1406,7 @@ function renderBudget(){
       </div>
       ${conv}
     </div>`;
-  }).join('') + `<div class="notice">Dated expenses land on that day in the cost chart. Undated ones spread evenly across the trip.</div>`;
+  }).join('') + `<div class="notice">Costs split evenly across the dates you set. Same start and end = one day. Leave blank to spread across the whole trip.</div>`;
 }
 
 /* ================= world map ================= */
@@ -1403,9 +1527,10 @@ function tripContext(t){
   ctx+=` Give money figures in ${homeCur()}.`;
   return ctx;
 }
-function sugCards(list){
+function sugCards(list,locIdx){
+  const idxOf=new Map(list.map((x,i)=>[x,i]));
   const sorted=[...list].sort((a,b)=>(b.toppick?1:0)-(a.toppick?1:0));
-  return sorted.map(s=>`<div class="sug-card ${s.toppick?'toppick':''}">
+  return sorted.map(s=>`<div class="sug-card ${s.toppick?'toppick':''}" data-i="${idxOf.get(s)}">
       ${s.toppick?'<div class="toppick-badge">★ Top pick</div>':''}
       <h4>${esc(s.name)}</h4>
       <div class="why">${esc(s.why)}</div>
@@ -1414,7 +1539,9 @@ function sugCards(list){
         ${s.transport?`<span>🚇 ${esc(s.transport)}</span>`:''}
         ${s.time?`<span>⏱ ${esc(s.time)}</span>`:''}
         ${s.type?`<span>${esc(s.type)}</span>`:''}
-      </div></div>`).join('');
+      </div>
+      ${locIdx!==undefined?`<button class="btn btn-ghost" style="margin-top:9px" onclick="addSuggestionToActivities(${locIdx},${idxOf.get(s)})">+ Add to Activities</button>`:''}
+      </div>`).join('');
 }
 function exploreLocs(t){
   return (t.locations||[]).filter(l=>l.city||l.country);
@@ -1456,7 +1583,7 @@ function renderExplore(){
   let html=exploreHeader(t);
   if(cache && cache.length){
     html+=`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;opacity:.55;margin:6px 0 12px;">Picks for ${esc(place)}</div>`
-      +sugCards(cache)
+      +sugCards(cache,exploreLocIdx)
       +`<button class="btn btn-ghost" onclick="fetchExplore()">Refresh suggestions</button>
         <div class="notice">Costs and travel times are estimates. Check opening hours and prices before you go.</div>`;
   } else {
