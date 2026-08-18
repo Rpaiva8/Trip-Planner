@@ -46,6 +46,57 @@
 
   .tabs{display:flex;flex-wrap:wrap;gap:5px;margin-top:14px;}
   .tabbreak{flex-basis:100%;height:0;}
+  .trip-card.manage{cursor:default;border-color:var(--brass);}
+  .trip-card.manage:active{transform:none;}
+  .modal-wrap{display:none;position:fixed;inset:0;background:rgba(27,42,65,.55);z-index:9999;align-items:center;justify-content:center;padding:20px;}
+  .modal-wrap.on{display:flex;}
+  .modal{background:var(--paper);border-radius:14px;padding:18px;max-width:340px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.35);}
+  .modal-title{font-family:-apple-system,'Avenir Next',sans-serif;font-weight:700;font-size:17px;margin-bottom:7px;}
+  .modal-body{font-size:13.5px;line-height:1.55;opacity:.8;margin-bottom:14px;white-space:pre-line;}
+  .modal .btn{margin-top:7px;}
+  #modalOk{background:var(--danger);color:#fff;}
+  #modalOk.safe{background:var(--ink);color:var(--paper);}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);
+    padding:11px 18px;border-radius:22px;font-size:13.5px;z-index:10000;opacity:0;pointer-events:none;transition:all .25s;max-width:88%;text-align:center;}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+  .mgbtns{display:flex;gap:7px;flex-shrink:0;}
+  .mgbtn{border:none;border-radius:9px;width:44px;height:44px;cursor:pointer;line-height:0;color:#fff;display:flex;align-items:center;justify-content:center;padding:0;}
+  .mgbtn svg{display:block;}
+  .mgbtn.dup{background:var(--stamp);}
+  .mgbtn.del{background:var(--danger);}
+  .managenote{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:var(--ink);opacity:.6;margin-bottom:9px;text-align:center;line-height:1.5;}
+  .warnbox{background:#FFF4E5;border:2px solid var(--danger);border-radius:11px;padding:14px;margin-bottom:14px;}
+  .warnbox .wh{display:flex;align-items:center;gap:8px;font-family:-apple-system,'Avenir Next',sans-serif;font-weight:700;font-size:15px;color:var(--danger);margin-bottom:7px;}
+  .warnbox p{margin:0 0 7px;font-size:13px;line-height:1.55;}
+  .warnbox p:last-child{margin-bottom:0;}
+  .pp-block{background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px;margin-bottom:10px;}
+  .pp-head{display:flex;align-items:center;gap:8px;margin-bottom:9px;padding-bottom:9px;border-bottom:1px solid var(--line);}
+  .pp-head .flag{font-size:17px;}
+  .pp-head .nm{font-family:-apple-system,'Avenir Next',sans-serif;font-weight:700;font-size:15px;}
+  .pp-status{display:inline-block;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.06em;
+    padding:4px 9px;border-radius:5px;background:var(--paper-dim);margin-bottom:9px;}
+  .pp-sub{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--stamp);margin:11px 0 6px;}
+  .pp-block ul{margin:0;padding-left:17px;}
+  .pp-block li{font-size:13.5px;line-height:1.55;margin-bottom:6px;}
+  .pp-link{display:block;font-size:12.5px;color:var(--stamp);margin-bottom:5px;word-break:break-all;}
+  .sch-box{background:var(--ink);color:var(--paper);border-radius:11px;padding:15px;margin-bottom:12px;}
+  .sch-box .n{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:27px;font-weight:700;color:var(--brass);}
+  .sch-box .l{font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.7;margin-top:3px;}
+  .sch-bar{height:9px;background:rgba(245,243,238,.2);border-radius:5px;margin-top:11px;overflow:hidden;}
+  .sch-bar i{display:block;height:100%;background:var(--brass);}
+  .sch-bar i.over{background:#E8613C;}
+  .tip-sec{background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px;margin-bottom:10px;}
+  .tip-sec h4{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--stamp);margin:0 0 9px;}
+  .tip-sec ul{margin:0;padding-left:17px;}
+  .tip-sec li{font-size:13.5px;line-height:1.55;margin-bottom:7px;}
+  .tip-sec.emerg{border-left:3px solid var(--danger);}
+  .tip-sec.emerg h4{color:var(--danger);}
+  .tip-meta{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.55;margin-bottom:12px;line-height:1.5;}
+  .tip-src{display:block;font-size:11px;color:var(--stamp);margin-bottom:4px;word-break:break-all;}
+  .tracklink{display:inline-block;background:var(--stamp);color:#fff;text-decoration:none;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;padding:7px 11px;border-radius:16px;}
+  .tracklink.alt{background:var(--paper-dim);color:var(--ink);}
+  .soonbox{background:#fff;border:1px solid var(--brass);border-left:3px solid var(--brass);border-radius:10px;padding:12px;margin-bottom:12px;}
+  .soonbox .hd{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--brass);margin-bottom:5px;}
   #printArea{display:none;}
   .exp-pick{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px;margin-bottom:7px;cursor:pointer;}
   .exp-pick input{width:19px;height:19px;accent-color:var(--stamp);flex-shrink:0;}
@@ -218,6 +269,7 @@
     <div class="quota" id="quotaLine"></div>
     <div id="tripsList"></div>
     <button class="btn btn-brass" id="newTripBtn" onclick="showNewTrip()">+ New trip</button>
+    <button class="btn btn-ghost" id="manageBtn" onclick="toggleManage()" style="display:none">Manage</button>
 
     <div id="newTripForm" style="display:none;margin-top:12px;">
       <div class="card">
@@ -260,6 +312,11 @@
       <div class="field" id="pf_cityOtherWrap" style="display:none;"><label>City name</label><input id="pf_cityOther"></div>
       <div class="field"><label>Street</label><input id="pf_street" placeholder="e.g. 12 High Street"></div>
       <div class="field"><label>Postcode</label><input id="pf_postcode" placeholder="e.g. W3 6AB"></div>
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin:14px 0 7px;">Passports</div>
+      <div style="font-size:12.5px;line-height:1.5;opacity:.7;margin-bottom:8px;">
+        Which passport(s) do you hold? Entry requirements are worked out for each one. Add more than one if you hold dual nationality.
+      </div>
+      <div id="pfPassports"></div>
       <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin:14px 0 7px;">Money</div>
       <div class="field"><label>Preferred currency *</label><select id="pf_currency"></select></div>
       <div class="notice" style="margin-top:0">All trip costs are converted into this currency for totals, whatever currency you enter them in.</div>
@@ -363,11 +420,13 @@
     <div class="card">
       <div class="card-title" style="margin-bottom:4px;">Back up your trips</div>
       <div style="font-size:13px;line-height:1.5;opacity:.7;margin-bottom:10px;">
-        Trips live only in this browser. Clearing browsing data wipes them. Export a copy before a big trip.
+        Trips live only in this browser. Clearing browsing data wipes them. Export a copy before a big trip, or to move to another device.
       </div>
       <button class="btn btn-stamp" onclick="exportData()">Export backup file</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">Restore from backup</button>
-      <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importData(this)">
+      <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">Load a backup file</button>
+      <input type="file" id="importFile" accept="application/json,.json,application/octet-stream" style="display:none" onchange="importData(this)">
+      <div id="importPreview" style="margin-top:10px"></div>
+      <div class="notice">Moving to another phone or laptop? Export here, send yourself the file, then Load it on the other device. Trips, profile and exchange rates all transfer — your API key does not, so re-enter that below.</div>
     </div>
 
     <div class="card">
@@ -418,6 +477,8 @@
       <div class="tab" data-panel="p_budget">Other Expenses</div>
       <div class="tabbreak"></div>
       <div class="tab" data-panel="p_time">Itinerary</div>
+      <div class="tab" data-panel="p_entry">Entry Rules</div>
+      <div class="tab" data-panel="p_tips">Local Tips</div>
       <div class="tab" data-panel="p_explore">Explore</div>
       <div class="tab" data-panel="p_nearby">Near stay</div>
       <div class="tab" data-panel="p_chat">Ask AI</div>
@@ -481,11 +542,22 @@
     </div>
 
     <div class="panel" id="p_time"><div id="timelineArea"></div></div>
+    <div class="panel" id="p_entry"><div id="entryArea"></div></div>
+    <div class="panel" id="p_tips"><div id="tipsArea"></div></div>
     <div class="panel" id="p_explore"><div id="exploreArea"></div></div>
     <div class="panel" id="p_nearby"><div id="nearbyArea"></div></div>
     <div class="panel" id="p_chat"><div id="chatArea"></div></div>
   </div>
 </div>
+<div id="modalWrap" class="modal-wrap" onclick="modalBackdrop(event)">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body" id="modalBody"></div>
+    <button class="btn" id="modalOk" onclick="modalAnswer(true)">OK</button>
+    <button class="btn btn-ghost" id="modalCancel" onclick="modalAnswer(false)">Cancel</button>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
 <div id="printArea"></div>
 
 <script>
@@ -630,6 +702,10 @@ const LAND = [
 /* Hainan */
 [[109,20],[111,20],[110,18],[109,19]]
 ];
+const NATIONALITIES=["United Kingdom","Ireland","United States","Canada","Australia","New Zealand","Brazil","Portugal","Spain","France","Italy","Germany","Netherlands","Belgium","Switzerland","Austria","Poland","Czechia","Hungary","Greece","Croatia","Denmark","Sweden","Norway","Finland","Iceland","Romania","Bulgaria","Slovakia","Slovenia","Estonia","Latvia","Lithuania","Luxembourg","Malta","Cyprus","Albania","Montenegro","Serbia","Bosnia and Herzegovina","North Macedonia","Turkey","Ukraine","Russia","India","Pakistan","Bangladesh","China","Japan","South Korea","Singapore","Malaysia","Thailand","Vietnam","Philippines","Indonesia","United Arab Emirates","Saudi Arabia","Qatar","Israel","Egypt","Morocco","Nigeria","Ghana","Kenya","South Africa","Mexico","Argentina","Chile","Colombia","Peru","Uruguay","Venezuela","Ecuador","Bolivia","Paraguay","Jamaica","Trinidad and Tobago"];
+/* Schengen area members (for the 90/180 calculator) */
+const SCHENGEN=new Set(["Austria","Belgium","Bulgaria","Croatia","Czechia","Denmark","Estonia","Finland","France","Germany","Greece","Hungary","Iceland","Italy","Latvia","Liechtenstein","Lithuania","Luxembourg","Malta","Netherlands","Norway","Poland","Portugal","Romania","Slovakia","Slovenia","Spain","Sweden","Switzerland"]);
+const EU_FREEDOM=new Set([...SCHENGEN,"Ireland"]);
 const OTHER = "Other — type it in";
 const CATEGORIES = ['Flights','Transport','Accommodation','Food','Activities','Shopping','Other'];
 const DURATIONS=[['','—'],['30','30 min'],['60','1 hour'],['90','1½ hours'],['120','2 hours'],['180','3 hours'],['240','4 hours'],['300','Half day'],['480','Full day']];
@@ -638,7 +714,7 @@ const MAX_TRIPS_PER_YEAR = 12;
 const MW = 1000, MH = 500;
 const DB_KEY = 'tripplanner_offline_v1';
 const KEY_KEY = 'tripplanner_apikey';
-const APP_VERSION = 'v9 · 17 Aug 2026 · timeline + PDF export';
+const APP_VERSION = 'v1.17 · 18 Aug 2026 · svg icons';
 let apiKey = '';
 const MAX_STOPS = 5;
 const CATCOLORS = {Travel:'#2F6F62',Accommodation:'#C9A227',Food:'#E8613C',Transport:'#4A7BA6',Activities:'#8A5DA6',Shopping:'#C25E8B',Other:'#7A8699',Flights:'#2F6F62'};
@@ -730,6 +806,7 @@ async function loadStore(){
   ntLocs=[{country:'',city:''}];
   renderLocs('new');
   buildProfileSelects();
+  renderPassportPicker();
   const vl=$('versionLine'); if(vl) vl.textContent=APP_VERSION;
   if(!store.profile || !store.profile.name){
     fillProfileForm(); showProfileView(); setStatus('');
@@ -766,8 +843,28 @@ function pfCountryPick(keepText){
   $('pf_cityOtherWrap').style.display=cityOther?'block':'none';
   if(cityOther && p.city && !keepText) $('pf_cityOther').value=p.city;
 }
+let pfPassports=[];
+function renderPassportPicker(){
+  const host=$('pfPassports'); if(!host) return;
+  if(!pfPassports.length) pfPassports=[''];
+  host.innerHTML=pfPassports.map((v,i)=>`
+    <div class="row2" style="align-items:flex-end;margin-bottom:6px">
+      <div class="field" style="margin-bottom:0"><label>${i===0?'Main passport':'Also holds'}</label>
+        <select onchange="setPassport(${i},this.value)">
+          <option value="">Select country…</option>
+          ${NATIONALITIES.map(n=>`<option ${v===n?'selected':''}>${esc(n)}</option>`).join('')}
+        </select></div>
+      ${pfPassports.length>1?`<button class="del" style="margin-bottom:9px" onclick="removePassport(${i})">✕</button>`:''}
+    </div>`).join('')
+    + (pfPassports.length<3?`<button class="btn btn-ghost" style="margin-top:2px" onclick="addPassport()">+ Add another passport</button>`:'');
+}
+function setPassport(i,v){ pfPassports[i]=v; }
+function addPassport(){ if(pfPassports.length<3){ pfPassports.push(''); renderPassportPicker(); } }
+function removePassport(i){ pfPassports.splice(i,1); renderPassportPicker(); }
 function fillProfileForm(){
   const p=store.profile||{};
+  pfPassports=(p.passports&&p.passports.length)?p.passports.slice():[''];
+  renderPassportPicker();
   $('pf_name').value=p.name||'';
   $('pf_street').value=p.street||'';
   $('pf_postcode').value=p.postcode||'';
@@ -778,7 +875,7 @@ function fillProfileForm(){
 }
 function saveProfile(firstRun){
   const name=$('pf_name').value.trim();
-  if(!name){ alert('Please add your name.'); return; }
+  if(!name){ tellUser('Name needed','Please add your name so the app can personalise your trips.'); return; }
   const cSel=$('pf_country').value;
   const country=cSel==='__other'?$('pf_countryOther').value.trim():cSel;
   const citySel=$('pf_city').value;
@@ -787,10 +884,11 @@ function saveProfile(firstRun){
     street:$('pf_street').value.trim(),
     postcode:$('pf_postcode').value.trim(),
     currency:$('pf_currency').value||'GBP',
+    passports:pfPassports.filter(Boolean),
     answerStyle:$('pf_style').value||'brief'};
   save();
-  if(firstRun){ showTripsView(); }
-  else { alert('Profile saved. Totals now show in '+store.profile.currency+'.'); renderSettings(); }
+  if(firstRun){ showTripsView(); toast('Profile saved'); }
+  else { toast('Profile saved — totals in '+store.profile.currency); renderSettings(); }
 }
 function homeAddress(){
   const p=store.profile||{};
@@ -808,7 +906,9 @@ function migrateTrip(t){
   if(t.exploreCache==null) t.exploreCache = {};
   const hc=homeCur();
   if(!Array.isArray(t.activities)) t.activities=[];
-  (t.travel||[]).forEach(b=>{ if(!b.cur) b.cur=hc; });
+  if(t.tips===undefined) t.tips=null;
+  if(t.entry===undefined) t.entry=null;
+  (t.travel||[]).forEach(b=>{ if(!b.cur) b.cur=hc; if(b.code===undefined) b.code=''; });
   (t.stays||[]).forEach(s=>{ if(!s.cur) s.cur=hc; });
   (t.expenses||[]).forEach(e=>{
     if(!e.cur) e.cur=hc;
@@ -835,6 +935,45 @@ function save(){
   },450);
 }
 function setStatus(t){ const el=$('statusLine'); if(el) el.textContent=t; }
+
+/* in-app dialogs — native confirm()/alert() can be suppressed in iOS home-screen apps */
+let modalResolve=null;
+function askConfirm(title,body,okLabel,danger){
+  return new Promise(res=>{
+    modalResolve=res;
+    $('modalTitle').textContent=title;
+    $('modalBody').textContent=body||'';
+    const ok=$('modalOk');
+    ok.textContent=okLabel||'Delete';
+    ok.className='btn'+(danger===false?' safe':'');
+    $('modalCancel').style.display='block';
+    $('modalWrap').classList.add('on');
+  });
+}
+function tellUser(title,body){
+  return new Promise(res=>{
+    modalResolve=res;
+    $('modalTitle').textContent=title;
+    $('modalBody').textContent=body||'';
+    const ok=$('modalOk');
+    ok.textContent='OK'; ok.className='btn safe';
+    $('modalCancel').style.display='none';
+    $('modalWrap').classList.add('on');
+  });
+}
+function modalAnswer(v){
+  $('modalWrap').classList.remove('on');
+  const r=modalResolve; modalResolve=null;
+  if(r) r(v);
+}
+function modalBackdrop(ev){ if(ev.target && ev.target.id==='modalWrap') modalAnswer(false); }
+let toastTimer=null;
+function toast(msg){
+  const el=$('toast'); if(!el) return;
+  el.textContent=msg; el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('on'),2400);
+}
 function saveSection(which){
   clearTimeout(saveTimer);
   const note=$('save_'+which);
@@ -849,44 +988,6 @@ function saveSection(which){
 }
 
 /* ================= dropdowns ================= */
-function buildCountrySelect(pfx, selected){
-  const sel=$(pfx+'_country'), countries=Object.keys(PLACES).sort();
-  const known=countries.includes(selected);
-  sel.innerHTML='<option value="">Select country…</option>'+
-    countries.map(c=>`<option ${selected===c?'selected':''}>${c}</option>`).join('')+
-    `<option value="__other" ${selected&&!known?'selected':''}>${OTHER}</option>`;
-  const isOther=selected&&!known;
-  $(pfx+'_countryOtherWrap').style.display=isOther?'block':'none';
-  if(isOther) $(pfx+'_countryOther').value=selected;
-}
-function countryValue(pfx){ const v=$(pfx+'_country').value; return v==='__other'?$(pfx+'_countryOther').value.trim():v; }
-function cityValue(pfx){ const v=$(pfx+'_city').value; return v==='__other'?$(pfx+'_cityOther').value.trim():v; }
-function onCountryPick(pfx){
-  const isOther=$(pfx+'_country').value==='__other';
-  $(pfx+'_countryOtherWrap').style.display=isOther?'block':'none';
-  if(!isOther) $(pfx+'_countryOther').value='';
-  onCityListRefresh(pfx);
-  if(pfx==='ed'){ editTrip('country',countryValue('ed')); editTrip('city',cityValue('ed')); }
-}
-function onCityListRefresh(pfx, selectedCity){
-  const country=countryValue(pfx), list=PLACES[country]||[], sel=$(pfx+'_city');
-  const known=list.includes(selectedCity);
-  if(list.length){
-    sel.innerHTML='<option value="">Select city…</option>'+
-      list.map(c=>`<option ${selectedCity===c?'selected':''}>${c}</option>`).join('')+
-      `<option value="__other" ${selectedCity&&!known?'selected':''}>${OTHER}</option>`;
-  } else { sel.innerHTML=`<option value="__other" selected>${OTHER}</option>`; }
-  const isOther=sel.value==='__other';
-  $(pfx+'_cityOtherWrap').style.display=isOther?'block':'none';
-  if(isOther&&selectedCity) $(pfx+'_cityOther').value=selectedCity;
-}
-function onCityPick(pfx){
-  const isOther=$(pfx+'_city').value==='__other';
-  $(pfx+'_cityOtherWrap').style.display=isOther?'block':'none';
-  if(!isOther) $(pfx+'_cityOther').value='';
-  if(pfx==='ed') editTrip('city',cityValue('ed'));
-}
-
 /* ================= multi-stop location picker ================= */
 function locScope(which){
   if(which==='new') return {arr:ntLocs, host:'ntLocsHost', edit:false};
@@ -989,6 +1090,26 @@ function countdown(t){
   if(today<=e) return 'happening now';
   return 'past trip';
 }
+const ICON_BIN='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
+const ICON_COPY='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>';
+let manageMode=false;
+function toggleManage(){
+  if(!store.trips.length) return;
+  manageMode=!manageMode; renderTrips();
+}
+async function deleteTripFromList(id,ev){
+  if(ev&&ev.stopPropagation) ev.stopPropagation();
+  const t=store.trips.find(x=>x.id===id); if(!t) return;
+  const label=t.name||primaryPlace(t)||'this trip';
+  const ok=await askConfirm('Delete "'+label+'"?',
+    'Everything in it — bookings, stays, activities and costs — goes with it. This cannot be undone.','Delete trip');
+  if(!ok) return;
+  store.trips=store.trips.filter(x=>x.id!==id);
+  if(currentTripId===id) currentTripId=null;
+  delete exportSel[id];
+  if(!store.trips.length) manageMode=false;
+  save(); renderTrips(); toast('Trip deleted');
+}
 function renderTrips(){
   const used=tripsThisYear(), left=MAX_TRIPS_PER_YEAR-used;
   $('tripsMeta').textContent=store.trips.length+(store.trips.length===1?' trip saved':' trips saved');
@@ -996,17 +1117,34 @@ function renderTrips(){
   const btn=$('newTripBtn');
   btn.disabled=left<=0;
   btn.textContent=left<=0?'Yearly limit reached (12)':'+ New trip';
+  const mb=$('manageBtn');
+  if(mb){
+    mb.style.display=store.trips.length?'block':'none';
+    mb.textContent=manageMode?'Done':'Manage';
+    mb.className=manageMode?'btn btn-stamp':'btn btn-ghost';
+  }
   const el=$('tripsList');
   if(!store.trips.length){ el.innerHTML='<div class="empty">No trips yet.<br>Add your first one below.</div>'; return; }
   const sorted=[...store.trips].sort((a,b)=>(a.start||'9999').localeCompare(b.start||'9999'));
-  el.innerHTML=sorted.map(t=>{
+  el.innerHTML=(manageMode?'<div class="managenote">Green copies a trip, red deletes it. Both ask you to confirm. Tap Done when finished.</div>':'')
+    +sorted.map(t=>{
     const place=locLabel(t);
     const ppl=num(t.travellers)>1?` · ${t.travellers} travellers`:'';
-    return `<div class="trip-card" onclick="openTrip('${t.id}')">
-      <div style="min-width:0">
+    const body=`<div style="min-width:0;flex:1">
         <div class="where">${esc(t.name||primaryPlace(t)||'Destination not set')}</div>
         <div class="when">${esc(place)} · ${fmtRange(t.start,t.end)}${ppl}</div>
-      </div>
+      </div>`;
+    if(manageMode){
+      return `<div class="trip-card manage">
+        ${body}
+        <div class="mgbtns">
+          <button class="mgbtn dup" onclick="duplicateTrip('${t.id}',event)" aria-label="Duplicate trip" title="Duplicate">${ICON_COPY}</button>
+          <button class="mgbtn del" onclick="deleteTripFromList('${t.id}',event)" aria-label="Delete trip" title="Delete">${ICON_BIN}</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="trip-card" onclick="openTrip('${t.id}')">
+      ${body}
       <div class="cost">${money(grandTotal(t))}<span class="cd">${countdown(t)}</span></div>
     </div>`;
   }).join('');
@@ -1021,12 +1159,12 @@ function hideNewTrip(){ $('newTripForm').style.display='none'; $('newTripBtn').s
 function createTrip(){
   const name=$('nt_name').value.trim();
   const locs=cleanLocs(ntLocs);
-  if(!name && !locs.length){ alert('Add a trip name or at least one stop (country/city).'); return; }
+  if(!name && !locs.length){ tellUser('Almost there','Add a trip name, or at least one stop (country and city).'); return; }
   const finalLocs = locs.length ? locs : [{country:'',city:''}];
   const t={id:uid(),name:name,locations:finalLocs,
     country:finalLocs[0].country,city:finalLocs[0].city,
     start:$('nt_start').value,end:$('nt_end').value,travellers:num($('nt_travellers').value)||1,
-    notes:'',travel:[],stays:[],expenses:[],activities:[],chat:[],explorePrefs:{tags:[],other:''},exploreCache:{},nearbyCache:null};
+    notes:'',travel:[],stays:[],expenses:[],activities:[],tips:null,entry:null,chat:[],explorePrefs:{tags:[],other:''},exploreCache:{},nearbyCache:null};
   store.trips.push(t);
   ['nt_name','nt_start','nt_end'].forEach(i=>$(i).value='');
   $('nt_travellers').value=1;
@@ -1037,7 +1175,7 @@ function createTrip(){
 /* ================= navigation ================= */
 function hideAll(){ ['tripsScreen','mapScreen','settingsScreen','tripScreen','profileScreen','exportScreen'].forEach(i=>$(i).classList.remove('active')); }
 function showProfileView(){ hideAll(); $('profileScreen').classList.add('active'); window.scrollTo(0,0); }
-function showTripsView(){ hideAll(); $('tripsScreen').classList.add('active'); window.scrollTo(0,0); renderTrips(); }
+function showTripsView(){ manageMode=false; hideAll(); $('tripsScreen').classList.add('active'); window.scrollTo(0,0); renderTrips(); }
 function showMapView(){ hideAll(); $('mapScreen').classList.add('active'); window.scrollTo(0,0); renderMap(); }
 function showSettingsView(){ hideAll(); $('settingsScreen').classList.add('active'); window.scrollTo(0,0); renderSettings(); }
 function openTrip(id){
@@ -1070,7 +1208,7 @@ function renderTripDetail(){
   $('ed_end').value=t.end||''; $('ed_notes').value=t.notes||'';
   $('ed_travellers').value=t.travellers||1;
   renderLocs('edit');
-  renderSummary(); renderTravel(); renderStays(); renderActivities(); renderBudget(); renderTimeline(); renderExplore(); renderNearby(); renderChat();
+  renderSummary(); renderTravel(); renderStays(); renderActivities(); renderBudget(); renderTimeline(); renderEntry(); renderTips(); renderExplore(); renderNearby(); renderChat();
 }
 function editTrip(field,val){
   const t=currentTrip(); if(!t) return;
@@ -1078,10 +1216,14 @@ function editTrip(field,val){
   updateTripHeader();
   save(); renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
 }
-function deleteTrip(){
-  if(!confirm('Delete this trip and everything in it?')) return;
+async function deleteTrip(){
+  const t=currentTrip();
+  const label=(t&&(t.name||primaryPlace(t)))||'this trip';
+  const ok=await askConfirm('Delete "'+label+'"?',
+    'Everything in it — bookings, stays, activities and costs — goes with it. This cannot be undone.','Delete trip');
+  if(!ok) return;
   store.trips=store.trips.filter(t=>t.id!==currentTripId);
-  save(); goToTrips();
+  save(); goToTrips(); toast('Trip deleted');
 }
 
 /* ================= totals ================= */
@@ -1190,7 +1332,25 @@ function renderSummary(){
   const place=locLabel(t);
   const stay=(t.stays||[])[0];
 
-  let html=`<div class="sum-hero">
+  let html='';
+  const soon=departsSoon(t);
+  if(soon.length){
+    const s0=soon[0], b=s0.b;
+    const mins=Math.round((s0.when-Date.now())/60000);
+    const when = mins<0 ? 'departed '+fmtDur(-mins)+' ago'
+               : mins<60 ? 'in '+mins+' min'
+               : 'in '+fmtDur(mins);
+    const route = s0.isRet ? `${esc(b.to||'?')} → ${esc(b.from||'?')}` : `${esc(b.from||'?')} → ${esc(b.to||'?')}`;
+    const links = s0.isRet ? trackReturnLinks(b) : trackLinks(b);
+    html+=`<div class="soonbox">
+      <div class="hd">${esc(b.mode||'Travel')} ${esc(when)}</div>
+      <div style="font-family:-apple-system,'Avenir Next',sans-serif;font-weight:700;font-size:15px;">${route}</div>
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;opacity:.65;margin-top:3px;">
+        ${esc(b.code?b.code+' · ':'')}${esc(s0.isRet?(b.retTime||''):(b.time||''))}${b.ref?' · Ref '+esc(b.ref):''}</div>
+      ${trackBtns(links)}
+    </div>`;
+  }
+  html+=`<div class="sum-hero">
       <div class="cd">${countdown(t)||'dates not set'}</div>
       <div class="big">${money(total)}</div>
       <div class="sub">total for ${ppl} traveller${ppl===1?'':'s'}</div>
@@ -1268,13 +1428,13 @@ function renderSummary(){
 /* ================= travel ================= */
 function addTravel(){
   currentTrip().travel.push({id:uid(),mode:'Flight',journey:'Return',carrier:'',ref:'',from:'',to:'',
-    date:'',time:'',retDate:'',retTime:'',retRef:'',cost:'',notes:''});
+    date:'',time:'',retDate:'',retTime:'',retRef:'',code:'',cost:'',cur:homeCur(),notes:''});
   save(); renderTravel(); renderSummary(); renderBudget();
 }
 function updTravel(id,f,v){
   const b=currentTrip().travel.find(x=>x.id===id); b[f]=v; save();
   renderSummary(); renderBudgetTotals(); renderBudgetBreakdown(); renderTimeline();
-  if(f==='mode'||f==='journey'||f==='cur') renderTravel();
+  if(f==='mode'||f==='journey'||f==='cur'||f==='code') renderTravel();
 }
 function delTravel(id){ const t=currentTrip(); t.travel=t.travel.filter(x=>x.id!==id); save(); renderTravel(); renderSummary(); renderBudget(); }
 function renderTravel(){
@@ -1304,6 +1464,8 @@ function renderTravel(){
         <div class="field"><label>Total cost</label><input type="number" value="${esc(b.cost)}" placeholder="0" oninput="updTravel('${b.id}','cost',this.value)"></div>
       </div>
       <div class="field"><label>Currency</label>${curSelect(b.cur||homeCur(),`updTravel('${b.id}','cur',this.value)`)}</div>
+      <div class="field"><label>${b.mode==='Flight'?'Flight number':'Service number'} <span style="opacity:.6">(for live tracking)</span></label>
+        <input value="${esc(b.code||'')}" placeholder="${b.mode==='Flight'?'e.g. BA1436':'e.g. 1S09'}" onchange="updTravel('${b.id}','code',this.value)"></div>
       ${per}
       <div class="leg">
         <div class="leg-label">Outbound</div>
@@ -1327,6 +1489,7 @@ function renderTravel(){
         <div class="field"><label>Return ref (if different)</label><input value="${esc(b.retRef)}" placeholder="Leave blank if same" onchange="updTravel('${b.id}','retRef',this.value)"></div>
       </div>`:''}
       <div class="field" style="margin-top:9px"><label>Notes</label><textarea placeholder="Terminal, seat, baggage" onchange="updTravel('${b.id}','notes',this.value)">${esc(b.notes)}</textarea></div>
+      ${trackBtns(trackLinks(b).concat(trackReturnLinks(b)))}
     </div>`;
   }).join('');
 }
@@ -1376,6 +1539,386 @@ function renderStays(){
       <div class="field"><label>Check-in instructions</label><textarea placeholder="From 15:00, key box code, contact number" onchange="updStay('${s.id}','notes',this.value)">${esc(s.notes)}</textarea></div>
     </div>`;
   }).join('')+`<div class="notice">★ The postcode drives the "Near stay" suggestions — the more exact it is, the better the results.</div>`;
+}
+
+/* ================= duplicate trip ================= */
+async function duplicateTrip(id,ev){
+  if(ev&&ev.stopPropagation) ev.stopPropagation();
+  const t=store.trips.find(x=>x.id===id); if(!t) return;
+  const thisYear=new Date().getFullYear();
+  const copyInThisYear = t.start && new Date(t.start).getFullYear()===thisYear;
+  if(copyInThisYear && tripsThisYear()>=MAX_TRIPS_PER_YEAR){
+    tellUser('Yearly limit reached','You already have '+MAX_TRIPS_PER_YEAR+' trips dated this year. Delete one first, or change the dates on the copy afterwards.');
+    return;
+  }
+  const label=t.name||primaryPlace(t)||'this trip';
+  const ok=await askConfirm('Duplicate "'+label+'"?',
+    'A copy is made with the same stops, dates, bookings, stays, activities and costs — all editable afterwards.\n\nBooking references are left blank so old confirmation numbers are not carried over, and saved AI results are not copied.',
+    'Duplicate', false);
+  if(!ok) return;
+  const c=JSON.parse(JSON.stringify(t));
+  c.id=uid();
+  c.name=label+' (copy)';
+  (c.travel||[]).forEach(b=>{ b.id=uid(); b.ref=''; b.retRef=''; });
+  (c.stays||[]).forEach(x=>{ x.id=uid(); x.ref=''; });
+  (c.activities||[]).forEach(a=>{ a.id=uid(); });
+  (c.expenses||[]).forEach(e=>{ e.id=uid(); });
+  c.exploreCache={}; c.nearbyCache=null; c.tips=null; c.entry=null; c.chat=[];
+  store.trips.push(c);
+  save(); renderTrips();
+  toast('Copy created — open it to edit');
+}
+
+/* ================= Entry Rules ================= */
+const ENTRY_DISCLAIMER=`<div class="warnbox">
+  <div class="wh">⚠ Check this with the official source</div>
+  <p><b>Entry rules change frequently and without warning.</b> Anything below is a research summary, not official advice, and it may already be out of date.</p>
+  <p>Before you book and again before you travel, confirm every requirement directly with the destination's own government or immigration authority, and with your airline. Getting this wrong can mean being refused boarding or entry.</p>
+  <p>Use the official links in each section — those are the authority, not this summary.</p>
+</div>`;
+
+/* ---- Schengen 90/180 ---- */
+function tripSchengenCountries(t){
+  return [...new Set((t.locations||[]).map(l=>l.country).filter(c=>SCHENGEN.has(c)))];
+}
+function schengenDayMap(){
+  const days=new Map();
+  store.trips.forEach(t=>{
+    if(!t.start||!t.end) return;
+    if(!tripSchengenCountries(t).length) return;
+    let d=new Date(t.start+'T00:00'); const o=new Date(t.end+'T00:00');
+    if(o<d) return;
+    while(d<=o){ days.set(d.toISOString().slice(0,10),true); d.setDate(d.getDate()+1); }
+  });
+  return days;
+}
+/* worst-case usage across any rolling 180-day window touching this trip */
+function schengenUsage(t){
+  const map=schengenDayMap();
+  if(!map.size) return null;
+  const all=[...map.keys()].sort();
+  const ref=[];
+  if(t.start&&t.end){
+    let d=new Date(t.start+'T00:00'); const o=new Date(t.end+'T00:00');
+    while(d<=o){ ref.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); }
+  }
+  if(!ref.length) ref.push(new Date().toISOString().slice(0,10));
+  let peak=0, peakDate=ref[0];
+  ref.forEach(day=>{
+    const end=new Date(day+'T00:00').getTime();
+    const start=end-179*86400000;
+    let n=0;
+    all.forEach(x=>{ const xt=new Date(x+'T00:00').getTime(); if(xt>=start&&xt<=end) n++; });
+    if(n>peak){ peak=n; peakDate=day; }
+  });
+  return {used:peak,onDate:peakDate,remaining:Math.max(0,90-peak),over:peak>90,totalTracked:map.size};
+}
+function schengenCard(t){
+  const inSch=tripSchengenCountries(t);
+  if(!inSch.length) return '';
+  const u=schengenUsage(t);
+  if(!u) return '';
+  const pct=Math.min(100,Math.round(u.used/90*100));
+  const nice=new Date(u.onDate+'T00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  return `<div class="sch-box">
+    <div class="n">${u.used} / 90</div>
+    <div class="l">Schengen days used in a rolling 180 days</div>
+    <div class="sch-bar"><i class="${u.over?'over':''}" style="width:${pct}%"></i></div>
+    <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;opacity:.8;margin-top:10px;line-height:1.55;">
+      Peak falls on ${esc(nice)}${u.over?' — that exceeds the 90-day limit.':` · ${u.remaining} day${u.remaining===1?'':'s'} left at that point.`}<br>
+      Counting ${u.totalTracked} Schengen day${u.totalTracked===1?'':'s'} across all trips in this app.
+    </div>
+  </div>
+  <div class="notice" style="margin-top:0">
+    The 90/180 rule applies to visitors without an EU/EEA passport or residence permit. This counter only knows the trips you have entered here —
+    any Schengen travel recorded elsewhere is missing, so treat it as a rough guide and keep your passport stamps as the real record.
+    A whole trip counts as Schengen days if any of its stops is in the Schengen area.
+  </div>`;
+}
+
+function entryDests(t){
+  return [...new Set((t.locations||[]).map(l=>l.country).filter(Boolean))];
+}
+function renderEntry(){
+  const t=currentTrip(); const el=$('entryArea');
+  const dests=entryDests(t);
+  const p=store.profile||{};
+  const passports=(p.passports||[]).filter(Boolean);
+  if(!dests.length){ el.innerHTML=ENTRY_DISCLAIMER+'<div class="empty">Add a country on the Plan tab first.</div>'; return; }
+  if(!passports.length){
+    el.innerHTML=ENTRY_DISCLAIMER+`<div class="empty">Add your passport nationality in Settings → Edit profile, then come back here.</div>`;
+    return;
+  }
+  let html=ENTRY_DISCLAIMER + schengenCard(t);
+  const e=t.entry;
+  if(e && e.blocks && e.blocks.length){
+    const when=new Date(e.generatedAt);
+    const ageDays=Math.floor((Date.now()-when.getTime())/86400000);
+    html+=`<div class="tip-meta">Researched ${esc(when.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}))}
+      ${ageDays>14?` — that is ${ageDays} days ago. Rules may have changed; refresh before you travel.`:''}<br>
+      For ${esc(dests.join(', '))} · passport${passports.length>1?'s':''}: ${esc(passports.join(', '))}</div>`;
+    e.blocks.forEach(b=>{
+      html+=`<div class="pp-block">
+        <div class="pp-head"><span class="flag">🛂</span><span class="nm">${esc(b.passport)} passport</span></div>
+        ${b.status?`<div class="pp-status">${esc(b.status)}</div>`:''}`;
+      [['BEFORE','Before you travel'],['BORDER','At the border'],['NOTES','Also worth knowing']].forEach(([k,label])=>{
+        const items=b[k];
+        if(items&&items.length){
+          html+=`<div class="pp-sub">${label}</div><ul>`+items.map(x=>`<li>${esc(x)}</li>`).join('')+`</ul>`;
+        }
+      });
+      if(b.LINKS&&b.LINKS.length){
+        html+=`<div class="pp-sub">Official sources</div>`+
+          b.LINKS.map(u=>`<a class="pp-link" href="${esc(u)}" target="_blank" rel="noopener">${esc(u)} ↗</a>`).join('');
+      }
+      html+=`</div>`;
+    });
+    if((e.sources||[]).length){
+      html+=`<div class="tip-sec"><h4>Pages consulted</h4>`+
+        e.sources.slice(0,10).map(sc=>`<a class="tip-src" href="${esc(sc.url)}" target="_blank" rel="noopener">${esc(sc.title||sc.url)} ↗</a>`).join('')+`</div>`;
+    }
+    html+=`<button class="btn btn-ghost" onclick="fetchEntry()">Check again for updates</button>
+      <div class="notice">Refresh this before booking and again shortly before you travel. Each check uses a live web search (roughly 10–15p).</div>`;
+  } else {
+    html+=`<div class="empty">Check what ${esc(passports.join(' and '))} passport holders need to enter ${esc(dests.join(', '))}.</div>
+      <button class="btn btn-brass" onclick="fetchEntry()">Check entry requirements</button>
+      <div class="notice">Uses a live web search and returns official government links (roughly 10–15p per check).</div>`;
+  }
+  el.innerHTML=html;
+}
+function parseEntryBlocks(text){
+  const blocks=[];
+  const parts=text.split(/##\s*PASSPORT\s*:/i).slice(1);
+  parts.forEach(part=>{
+    const nameLine=part.split('\n')[0].trim();
+    const b={passport:nameLine.replace(/[*_#]/g,'').trim()||'Passport',status:'',BEFORE:[],BORDER:[],NOTES:[],LINKS:[]};
+    const grab=(key)=>{
+      const re=new RegExp('###\\s*'+key+'\\s*([\\s\\S]*?)(?=###\\s*(?:STATUS|BEFORE|BORDER|NOTES|LINKS)|$)','i');
+      const m=part.match(re);
+      if(!m) return [];
+      return m[1].split('\n')
+        .map(l=>l.replace(/^\s*[-*\u2022]\s*/,'').replace(/\[\d+\]/g,'').replace(/[*_]/g,'').trim())
+        .filter(l=>l.length>2);
+    };
+    const st=grab('STATUS'); if(st.length) b.status=st[0].slice(0,90);
+    b.BEFORE=grab('BEFORE'); b.BORDER=grab('BORDER'); b.NOTES=grab('NOTES');
+    b.LINKS=grab('LINKS').map(l=>{ const m=l.match(/https?:\/\/[^\s)\]]+/); return m?m[0]:null; }).filter(Boolean);
+    if(b.status||b.BEFORE.length||b.BORDER.length||b.LINKS.length) blocks.push(b);
+  });
+  return blocks;
+}
+async function fetchEntry(){
+  const t=currentTrip(); const el=$('entryArea');
+  const dests=entryDests(t);
+  const p=store.profile||{};
+  const passports=(p.passports||[]).filter(Boolean);
+  el.innerHTML=ENTRY_DISCLAIMER+'<div class="loader">Checking entry requirements</div>';
+  const when=(t.start&&t.end)?`The trip is ${t.start} to ${t.end}`:'Dates not yet fixed';
+  const prompt=`Research current entry requirements using the web.
+
+Traveller holds these passports: ${passports.join(' and ')}.
+Destination country or countries: ${dests.join(', ')}.
+${when}. Purpose: ordinary tourism, short stay.
+
+Search official government and immigration sources. For EACH passport separately, report what that passport holder needs.
+
+Use EXACTLY this structure for each passport, and nothing else:
+
+## PASSPORT: ${passports[0]}
+### STATUS
+(one short line, e.g. "Visa-free for up to 6 months" or "ETA required before travel")
+### BEFORE
+(3-6 bullets: anything to obtain or arrange before travelling — visa, ETA, ETIAS, eVisa, passport validity rules, blank pages, vaccination certificates. Give the cost and processing time if you find it.)
+### BORDER
+(2-4 bullets: what to show or expect on arrival — return ticket, proof of funds, accommodation details, biometrics)
+### NOTES
+(1-3 bullets: anything unusual, including dual-national rules about which passport to enter on)
+### LINKS
+(2-4 official government URLs only, one per line, full https addresses. Prefer the destination's own immigration or government site, plus the IATA Travel Centre.)
+${passports.slice(1).map(x=>`
+## PASSPORT: ${x}
+(same five sections for this passport)`).join('')}
+
+Be precise and factual. If you are not certain of a rule, say so in that bullet rather than guessing. Do not invent URLs — only give links you actually found.`;
+  try{
+    const data=await callClaude({
+      messages:[{role:'user',content:prompt}],
+      tools:[{type:'web_search_20250305',name:'web_search'}],
+      max_tokens:3500, raw:true
+    });
+    const {text,sources}=extractCited(data);
+    const blocks=parseEntryBlocks(text);
+    if(!blocks.length) throw new Error('BADJSON');
+    t.entry={generatedAt:new Date().toISOString(),blocks,sources,
+      destinations:dests.slice(),passports:passports.slice()};
+    save(); renderEntry();
+  }catch(e){
+    el.innerHTML=ENTRY_DISCLAIMER+aiError(e)+'<button class="btn btn-brass" onclick="fetchEntry()">Retry</button>';
+  }
+}
+
+/* ================= local tips (offline briefing) ================= */
+const TIP_SECTIONS=[
+  ['ETIQUETTE','Etiquette & manners',''],
+  ['CUSTOMS','Local customs',''],
+  ['AWARE','Things to be aware of',''],
+  ['MONEY','Money & tipping',''],
+  ['EMERGENCY','Emergency & useful contacts','emerg']
+];
+function within24h(t){
+  if(!t.start) return false;
+  const start=new Date(t.start+'T00:00').getTime();
+  return Date.now() >= start-24*3600000;
+}
+function renderTips(){
+  const t=currentTrip(); const el=$('tipsArea');
+  const locs=exploreLocs(t);
+  if(!locs.length){ el.innerHTML='<div class="empty">Add a country and city on the Plan tab first.</div>'; return; }
+  const tips=t.tips;
+  if(!tips){
+    el.innerHTML=`<div class="empty">Get a briefing on etiquette, customs, things to watch for and emergency contacts for ${esc(locLabel(t))}.<br><br>
+      Generate it while you have signal — it's saved and readable offline for the whole trip.</div>
+      <button class="btn btn-brass" onclick="fetchTips(false)">Prepare briefing</button>
+      <div class="notice">Uses a live web search, so it costs a little more than other features (roughly 10–15p). You get one briefing per trip, plus one refresh in the 24 hours before you travel.</div>`;
+    return;
+  }
+  const canRefresh = !tips.refreshedAt && within24h(t);
+  let html=`<div class="tip-meta">Briefing for ${esc(locLabel(t))}<br>
+    Prepared ${esc(new Date(tips.generatedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}))}
+    ${tips.refreshedAt?(' · refreshed '+esc(new Date(tips.refreshedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}))):''}</div>`;
+  TIP_SECTIONS.forEach(([key,title,cls])=>{
+    const items=(tips.sections||{})[key];
+    if(!items||!items.length) return;
+    html+=`<div class="tip-sec ${cls}"><h4>${esc(title)}</h4><ul>`+
+      items.map(x=>`<li>${esc(x)}</li>`).join('')+`</ul></div>`;
+  });
+  if((tips.sources||[]).length){
+    html+=`<div class="tip-sec"><h4>Sources</h4>`+
+      tips.sources.slice(0,10).map(sc=>`<a class="tip-src" href="${esc(sc.url)}" target="_blank" rel="noopener">${esc(sc.title||sc.url)} ↗</a>`).join('')+
+      `</div>`;
+  }
+  if(canRefresh){
+    html+=`<button class="btn btn-ghost" onclick="fetchTips(true)">Refresh briefing (one time only)</button>
+      <div class="notice">You're within 24 hours of departure, so you can refresh once. After this it's locked for the trip.</div>`;
+  } else {
+    html+=`<div class="notice">${tips.refreshedAt
+      ? 'This briefing has had its one refresh and is now fixed for the trip.'
+      : 'One refresh becomes available in the 24 hours before you travel.'}
+      Stable facts like customs and emergency numbers rarely change; always confirm prices and opening hours locally.</div>`;
+  }
+  el.innerHTML=html;
+}
+function parseTipSections(text){
+  const out={};
+  const keys=TIP_SECTIONS.map(x=>x[0]);
+  keys.forEach((k,i)=>{
+    const re=new RegExp('##\\s*'+k+'\\s*([\\s\\S]*?)(?=##\\s*(?:'+keys.join('|')+')|$)','i');
+    const m=text.match(re);
+    if(!m) return;
+    const lines=m[1].split('\n')
+      .map(l=>l.replace(/^\s*[-*\u2022]\s*/,'').replace(/\[\d+\]/g,'').trim())
+      .filter(l=>l.length>2);
+    if(lines.length) out[k]=lines.slice(0,10);
+  });
+  return out;
+}
+async function fetchTips(isRefresh){
+  const t=currentTrip();
+  const el=$('tipsArea');
+  if(isRefresh && (t.tips&&t.tips.refreshedAt)){ tellUser('Already refreshed','This briefing has used its one refresh and is now fixed for the trip.'); return; }
+  el.innerHTML='<div class="loader">Researching '+esc(primaryPlace(t)||'your destination')+'</div>'+
+    '<div class="notice">Searching the web and putting the briefing together. This takes a little longer than other features.</div>';
+  const when=(t.start&&t.end)?`travelling ${t.start} to ${t.end}`:'travelling soon';
+  const p=store.profile||{};
+  const from=[p.city,p.country].filter(Boolean).join(', ');
+  const prompt=`Research and write a practical pre-travel briefing for a visitor going to ${locLabel(t)}, ${when}${from?`, travelling from ${from}`:''}.
+Search the web for current, reliable information. Focus ONLY on stable facts that stay true for months — do not include opening hours, ticket prices, event listings or anything that changes weekly.
+
+Return your answer in EXACTLY this format, using these five headings, with 4-6 short bullet points under each. Each bullet must be one sentence, plain text, no markdown bold, no numbering.
+
+## ETIQUETTE
+(greetings, politeness, queuing, dress, table manners, what is considered rude)
+## CUSTOMS
+(local habits, meal times, opening patterns, religious or cultural norms a visitor should respect)
+## AWARE
+(common scams, safety points, laws visitors break unknowingly, transport gotchas)
+## MONEY
+(tipping norms, card vs cash, typical service charge conventions)
+## EMERGENCY
+(emergency number, police/ambulance/fire, tourist police if any, the visitor's own embassy or consulate contact for ${from||'their home country'}, and any national health or helpline numbers)
+
+Include actual phone numbers in the EMERGENCY section where you can verify them.`;
+  try{
+    const data=await callClaude({
+      messages:[{role:'user',content:prompt}],
+      tools:[{type:'web_search_20250305',name:'web_search'}],
+      max_tokens:3000, raw:true
+    });
+    const {text,sources}=extractCited(data);
+    const sections=parseTipSections(text);
+    if(!Object.keys(sections).length) throw new Error('BADJSON');
+    const now=new Date().toISOString();
+    if(isRefresh && t.tips){
+      t.tips.sections=sections; t.tips.sources=sources; t.tips.refreshedAt=now;
+    } else {
+      t.tips={generatedAt:now,refreshedAt:null,sections,sources};
+    }
+    save(); renderTips();
+  }catch(e){
+    el.innerHTML=aiError(e)+`<button class="btn btn-brass" onclick="fetchTips(${isRefresh?'true':'false'})">Retry</button>`;
+  }
+}
+
+/* ================= live tracking deep links ================= */
+function gsearch(q){ return 'https://www.google.com/search?q='+encodeURIComponent(q); }
+function trackLinks(b){
+  const code=(b.code||'').replace(/\s+/g,'').toUpperCase();
+  const out=[];
+  const dateTxt=b.date||'';
+  if(b.mode==='Flight'){
+    if(code){
+      out.push({label:'Track '+code,url:'https://www.flightaware.com/live/flight/'+encodeURIComponent(code)});
+      out.push({label:'Google status',url:gsearch(code+' flight status '+dateTxt)});
+    } else if(b.from||b.to){
+      out.push({label:'Find flight status',url:gsearch((b.from||'')+' to '+(b.to||'')+' flight status '+dateTxt)});
+    }
+  } else if(b.mode==='Train'){
+    if(code) out.push({label:'Track '+code,url:gsearch(code+' train live status '+dateTxt)});
+    if(b.from||b.to){
+      out.push({label:'Live times',url:gsearch('trains '+(b.from||'')+' to '+(b.to||'')+' live departures '+dateTxt)});
+      out.push({label:'National Rail',url:'https://www.nationalrail.co.uk/journey-planner/'});
+    }
+  } else if(b.mode==='Ferry'||b.mode==='Bus'){
+    const what=b.mode==='Ferry'?'ferry':'coach';
+    out.push({label:'Check status',url:gsearch((b.carrier||'')+' '+what+' '+(b.from||'')+' to '+(b.to||'')+' status '+dateTxt)});
+  } else if(b.mode==='Car hire'){
+    if(b.carrier) out.push({label:'Find provider',url:gsearch(b.carrier+' car hire '+(b.from||''))});
+  }
+  return out;
+}
+function trackReturnLinks(b){
+  if(b.journey!=='Return') return [];
+  const fake=Object.assign({},b,{from:b.to,to:b.from,date:b.retDate});
+  return trackLinks(fake).map(l=>({label:l.label.replace('Track ','Return: ').replace(/^(Find|Live|Google|Check|National)/,'Return $1'),url:l.url}));
+}
+function trackBtns(list){
+  if(!list.length) return '';
+  return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">`+list.map(l=>
+    `<a href="${l.url}" target="_blank" rel="noopener" class="tracklink">${esc(l.label)} ↗</a>`).join('')+`</div>`;
+}
+function departsSoon(t){
+  const now=Date.now();
+  const soon=[];
+  (t.travel||[]).forEach(b=>{
+    [[b.date,b.time,false],[b.retDate,b.retTime,true]].forEach(([d,tm,isRet])=>{
+      if(!d) return;
+      if(isRet && b.journey!=='Return') return;
+      const when=new Date(d+'T'+(tm||'00:00')).getTime();
+      const diff=when-now;
+      if(diff>-6*3600000 && diff<24*3600000) soon.push({b,isRet,when});
+    });
+  });
+  return soon.sort((a,b)=>a.when-b.when);
 }
 
 /* ================= PDF export ================= */
@@ -1513,7 +2056,7 @@ function tripToPrintHTML(t){
 }
 function doExport(){
   const chosen=store.trips.filter(t=>exportSel[t.id]);
-  if(!chosen.length){ alert('Select at least one trip first.'); return; }
+  if(!chosen.length){ tellUser('Nothing selected','Tick at least one trip to export.'); return; }
   chosen.sort((a,b)=>(a.start||'9999').localeCompare(b.start||'9999'));
   const prev=currentTripId;
   let html='';
@@ -1658,10 +2201,11 @@ function delAct(id){
 }
 function addSuggestionToActivities(locIdx,i){
   const t=currentTrip();
-  const s=((t.exploreCache||{})[locIdx]||[])[i];
+  const list = (locIdx==='near') ? (t.nearbyCache||[]) : ((t.exploreCache||{})[locIdx]||[]);
+  const s=list[i];
   if(!s) return;
   addActivity({name:s.name,desc:[s.why,s.transport?('Getting there: '+s.transport):''].filter(Boolean).join(' '),cat:'Sightseeing'});
-  alert('"'+s.name+'" added to your Activities.');
+  toast('Added to Activities');
 }
 function renderActivities(){
   const t=currentTrip(); const el=$('actList'); const hc=homeCur(); const ppl=travellers(t);
@@ -1842,6 +2386,7 @@ async function callClaude(opts){
   if(!apiKey) throw new Error('NOKEY');
   const body={model:"claude-sonnet-5",max_tokens:opts.max_tokens||1000,messages:opts.messages};
   if(opts.system) body.system=opts.system;
+  if(opts.tools) body.tools=opts.tools;
   const res=await fetch("https://api.anthropic.com/v1/messages",{
     method:"POST",
     headers:{
@@ -1860,13 +2405,54 @@ async function callClaude(opts){
     throw err;
   }
   const data=await res.json();
+  if(opts.raw) return data;
   return (data.content||[]).map(c=>c.text||'').join('\n');
 }
-async function askClaude(prompt){
-  const text=await callClaude({messages:[{role:"user",content:prompt}],max_tokens:1400});
-  const clean=text.replace(/```json/g,'').replace(/```/g,'').trim();
-  const a=clean.indexOf('['), b=clean.lastIndexOf(']');
-  return JSON.parse(a>=0?clean.slice(a,b+1):clean);
+/* pull text + cited sources out of a web-search response */
+function extractCited(data){
+  let text=''; const src=new Map();
+  (data.content||[]).forEach(c=>{
+    if(c.type==='text'){
+      text+=c.text||'';
+      (c.citations||[]).forEach(ci=>{
+        const u=ci.url||ci.source; if(u&&!src.has(u)) src.set(u,ci.title||u);
+      });
+    }
+  });
+  return {text,sources:[...src].map(([url,title])=>({url,title}))};
+}
+/* Tolerant JSON-array parser: handles code fences, preamble, and truncated replies */
+function parseJsonArray(text){
+  let clean=String(text||'').replace(/```json/gi,'').replace(/```/g,'').trim();
+  const a=clean.indexOf('[');
+  if(a<0) throw new Error('BADJSON');
+  const b=clean.lastIndexOf(']');
+  if(b>a){
+    try{ return JSON.parse(clean.slice(a,b+1)); }catch(_){}
+  }
+  /* Truncated or malformed: salvage every complete {...} object */
+  const body=clean.slice(a+1);
+  const out=[]; let depth=0,start=-1,inStr=false,escNext=false;
+  for(let i=0;i<body.length;i++){
+    const ch=body[i];
+    if(escNext){ escNext=false; continue; }
+    if(ch==='\\'){ escNext=true; continue; }
+    if(ch==='"'){ inStr=!inStr; continue; }
+    if(inStr) continue;
+    if(ch==='{'){ if(depth===0) start=i; depth++; }
+    else if(ch==='}'){ depth--;
+      if(depth===0&&start>=0){
+        try{ out.push(JSON.parse(body.slice(start,i+1))); }catch(_){}
+        start=-1;
+      }
+    }
+  }
+  if(!out.length) throw new Error('BADJSON');
+  return out;
+}
+async function askClaude(prompt,maxTok){
+  const text=await callClaude({messages:[{role:"user",content:prompt}],max_tokens:maxTok||2600});
+  return parseJsonArray(text);
 }
 /* trip context shared by explore + chat */
 function tripContext(t){
@@ -1896,7 +2482,7 @@ function sugCards(list,locIdx){
         ${s.time?`<span>⏱ ${esc(s.time)}</span>`:''}
         ${s.type?`<span>${esc(s.type)}</span>`:''}
       </div>
-      ${locIdx!==undefined?`<button class="btn btn-ghost" style="margin-top:9px" onclick="addSuggestionToActivities(${locIdx},${idxOf.get(s)})">+ Add to Activities</button>`:''}
+      ${locIdx!==undefined?`<button class="btn btn-ghost" style="margin-top:9px" onclick="addSuggestionToActivities(${typeof locIdx==='string'?`'${locIdx}'`:locIdx},${idxOf.get(s)})">+ Add to Activities</button>`:''}
       </div>`).join('');
 }
 function exploreLocs(t){
@@ -1961,12 +2547,12 @@ async function fetchExplore(){
   const prompt=`You are an experienced local travel guide for ${place}. ${dates}
 The party is ${ppl} traveller${ppl===1?'':'s'} — factor that into cost estimates where it matters.
 ${prefLine}
-Suggest 6 genuinely worthwhile things to do — a mix of famous must-sees and one or two things visitors often miss.
+Suggest 6 genuinely worthwhile things to do. Keep every field short and factual. — a mix of famous must-sees and one or two things visitors often miss.
 Mark the 2 strongest as top picks. Return ONLY a JSON array, no markdown, no preamble. Each object must have exactly these keys:
 "name", "type" (short category e.g. Museum, Viewpoint, Beach, Neighbourhood),
-"why" (1-2 sentences on what makes it worth it${wants?', mentioning the fit with their interests where relevant':''}),
+"why" (ONE short sentence, max 20 words, on what makes it worth it${wants?', mentioning the fit with their interests where relevant':''}),
 "cost" (entry cost per person in ${homeCur()}, e.g. "Free" or "about 12"),
-"transport" (how to get there from the city centre, naming the actual line/bus/walk time),
+"transport" (max 10 words, e.g. "Tram to Princes St, 5 min walk"),
 "time" (how long to allow, e.g. "2-3 hrs"),
 "toppick" (true for exactly 2 of them, false for the rest).`;
   try{
@@ -1983,7 +2569,7 @@ function renderNearby(){
   const label=stay.postcode+(stay.name?' · '+stay.name:'');
   if(t.nearbyCache){
     el.innerHTML=`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;opacity:.55;margin-bottom:12px;">Within ~3 miles of ${esc(label)}</div>`
-      +sugCards(t.nearbyCache)
+      +sugCards(t.nearbyCache,'near')
       +`<button class="btn btn-ghost" onclick="fetchNearby()">Get new suggestions</button>
         <div class="notice">Distances are worked out from the postcode you entered, not live GPS. Confirm on a map before setting off.</div>`;
   } else {
@@ -2003,9 +2589,9 @@ Include a mix: somewhere to eat, a bar or cafe, a local attraction, a park or gr
 Favour places locals actually use over tourist traps. Name the neighbourhood in the first "why" so the traveller can sanity-check the location.
 Return ONLY a JSON array, no markdown, no preamble. Each object must have exactly these keys:
 "name", "type" (e.g. Restaurant, Cafe, Park, Market, Attraction),
-"why" (1-2 sentences on what it's like and what to order or see),
+"why" (ONE short sentence, max 20 words, on what it's like and what to order),
 "cost" (typical spend per person in ${homeCur()}, e.g. "about 15 a head"),
-"transport" (walking time from the postcode, or the specific bus/metro),
+"transport" (max 10 words, e.g. "12 min walk" or "Bus 22, 3 stops"),
 "time" (how long to allow).`;
   try{ t.nearbyCache=await askClaude(prompt); save(); renderNearby(); }
   catch(e){ $('nearbyArea').innerHTML=aiError(e)+'<button class="btn btn-brass" onclick="fetchNearby()">Retry</button>'; }
@@ -2019,6 +2605,7 @@ function aiErrorText(e){
   if(s===403) return 'Access denied. Check the key belongs to an active account with credit.';
   if(s===429) return 'Rate limited — too many requests at once. Wait a minute and try again.';
   if(s>=500) return 'Anthropic servers had a problem. Try again shortly.';
+  if(String(e.message)==='BADJSON') return 'The reply came back in an unexpected format. Tap Retry — it usually works second time.';
   if(e.detail) return 'API error: '+e.detail;
   if(!navigator.onLine) return 'You appear to be offline. Suggestions need a connection.';
   return 'Could not reach the AI. Check your connection, and that your key is valid and has credit.';
@@ -2050,7 +2637,8 @@ function renderChat(){
         oninput="autoGrow(this)" onkeydown="chatKey(event)"></textarea>
       <button class="chat-send" ${chatBusy?'disabled':''} onclick="sendChat()">➤</button>
     </div>
-    <div class="chat-hint">Answers are AI estimates for ${esc(locLabel(t))}. Each question costs a fraction of a penny.</div>`;
+    <div class="chat-hint">Answers are AI estimates for ${esc(locLabel(t))}. Each question costs a fraction of a penny.</div>
+    ${msgs.length?`<button class="btn btn-ghost" onclick="clearChat()">Clear this chat</button>`:''}`;
   const sc=$('chatScroll'); if(sc) sc.scrollTop=sc.scrollHeight;
 }
 function autoGrow(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
@@ -2090,10 +2678,10 @@ Be specific and concrete: name actual places, lines, streets and rough prices ra
   }
   chatBusy=false; save(); renderChat();
 }
-function clearChat(){
+async function clearChat(){
   const t=currentTrip(); if(!t.chat||!t.chat.length) return;
-  if(!confirm('Clear this trip chat?')) return;
-  t.chat=[]; save(); renderChat();
+  if(!await askConfirm('Clear this chat?','The conversation for this trip will be removed.','Clear chat')) return;
+  t.chat=[]; save(); renderChat(); toast('Chat cleared');
 }
 
 /* ================= settings & backup ================= */
@@ -2107,6 +2695,7 @@ function renderSettings(){
   $('profileSummary').innerHTML = p.name
     ? `<b>${esc(p.name)}</b><br>${esc(homeAddress()||'No address set')}<br>
        Totals shown in <b>${esc(p.currency||'GBP')}</b> — ${esc((CURRENCIES[p.currency]||CURRENCIES.GBP).name)}<br>
+       Passport${(p.passports||[]).length===1?'':'s'}: <b>${esc((p.passports||[]).join(', ')||'not set')}</b><br>
        AI answers: <b>${esc(p.answerStyle||'brief')}</b>, travel topics only`
     : 'No profile yet.';
   renderRates();
@@ -2138,27 +2727,24 @@ function renderRates(){
 }
 function setRate(code,val){
   const v=parseFloat(val);
-  if(isNaN(v)||v<=0){ alert('Enter a positive number.'); renderRates(); return; }
+  if(isNaN(v)||v<=0){ tellUser('Invalid rate','Enter a number greater than zero.'); renderRates(); return; }
   if(!store.rates) store.rates={};
   store.rates[code]=v*rateOf(homeCur());
   save(); renderRates();
   if(currentTripId) renderTripDetail();
 }
-function resetRates(){
-  if(!confirm('Reset all exchange rates to the built-in defaults?')) return;
-  store.rates={}; save(); renderRates();
+async function resetRates(){
+  if(!await askConfirm('Reset exchange rates?','Any rates you edited go back to the built-in defaults.','Reset',false)) return;
+  store.rates={}; save(); renderRates(); toast('Rates reset');
 }
 function saveKey(){
   apiKey = $('setKey').value.replace(/\s+/g,'').trim();
   if(apiKey) localStorage.setItem(KEY_KEY, apiKey); else localStorage.removeItem(KEY_KEY);
   renderSettings();
   if(apiKey && !apiKey.startsWith('sk-ant-')){
-    alert('Saved, but that does not look like an Anthropic key — they normally start with "sk-ant-".');
-  } else if(apiKey){
-    alert('Key saved. Use "Test key" below to check it works.');
-  } else {
-    alert('Key removed.');
-  }
+    tellUser('Saved, but check it','That does not look like an Anthropic key — they normally start with "sk-ant-".');
+  } else if(apiKey){ toast('Key saved — try "Test key"'); }
+  else { toast('Key removed'); }
 }
 async function testKey(){
   const el=$('keyTest');
@@ -2179,25 +2765,78 @@ function exportData(){
   a.click();
   URL.revokeObjectURL(a.href);
 }
+let pendingImport=null;
 function importData(input){
   const f = input.files[0]; if(!f) return;
   const r = new FileReader();
   r.onload = () => {
     try{
       const d = JSON.parse(r.result);
-      if(!d.trips) throw new Error('bad file');
-      if(!confirm('Replace all ' + store.trips.length + ' trips on this device with ' + d.trips.length + ' from the file?')) return;
-      store = d; save(); renderTrips(); renderSettings();
-      alert('Restored ' + d.trips.length + ' trips.');
-    }catch(e){ alert('That file was not a trip backup.'); }
+      if(!d || !Array.isArray(d.trips)) throw new Error('bad');
+      pendingImport = d;
+      showImportPreview(f.name, d);
+    }catch(e){
+      pendingImport=null;
+      $('importPreview').innerHTML='<div class="err">That file was not a trip backup. Look for the file the app exported, named something like my-trips-2026-08-18.json.</div>';
+    }
   };
+  r.onerror = () => { $('importPreview').innerHTML='<div class="err">Could not read that file.</div>'; };
   r.readAsText(f);
   input.value = '';
 }
-function wipeData(){
-  if(!confirm('Delete every trip on this device? Export a backup first if you want to keep them.')) return;
-  if(!confirm('Last chance — this cannot be undone.')) return;
-  store = {trips:[]}; save(); renderTrips(); renderSettings();
+function showImportPreview(fname, d){
+  const incoming = d.trips.length;
+  const ids = new Set(store.trips.map(t=>t.id));
+  const dupes = d.trips.filter(t=>ids.has(t.id)).length;
+  const fresh = incoming - dupes;
+  const hasProfile = !!(d.profile && d.profile.name);
+  $('importPreview').innerHTML = `
+    <div class="card" style="border-color:var(--stamp)">
+      <div class="card-title" style="margin-bottom:6px;">${esc(fname)}</div>
+      <div style="font-size:13px;line-height:1.6;opacity:.8;margin-bottom:10px;">
+        ${incoming} trip${incoming===1?'':'s'} in this file · ${fresh} new to this device${dupes?` · ${dupes} already here`:''}<br>
+        ${hasProfile?`Includes a profile for <b>${esc(d.profile.name)}</b> (${esc(d.profile.currency||'GBP')})`:'No profile in this file — yours will be kept'}
+      </div>
+      <button class="btn btn-stamp" onclick="applyImport('merge')">Merge — add the ${fresh} new trip${fresh===1?'':'s'}</button>
+      <button class="btn btn-ghost" onclick="applyImport('replace')">Replace everything on this device</button>
+      <button class="btn btn-ghost" onclick="cancelImport()">Cancel</button>
+      <div class="notice">Merge keeps what's already here. Replace deletes this device's ${store.trips.length} trip${store.trips.length===1?'':'s'} first.</div>
+    </div>`;
+}
+function cancelImport(){ pendingImport=null; $('importPreview').innerHTML=''; }
+async function applyImport(mode){
+  const d = pendingImport;
+  if(!d) return;
+  if(mode==='replace'){
+    const ok=await askConfirm('Replace everything?',
+      'The '+store.trips.length+' trip(s) on this device will be deleted and replaced with the '+d.trips.length+' from the file.','Replace');
+    if(!ok) return;
+  }
+  if(mode==='replace'){
+    store.trips = d.trips.slice();
+    if(d.profile && d.profile.name) store.profile = d.profile;
+    store.rates = d.rates || {};
+  } else {
+    const ids = new Set(store.trips.map(t=>t.id));
+    let added=0;
+    d.trips.forEach(t=>{ if(!ids.has(t.id)){ store.trips.push(t); added++; } });
+    if(!store.profile || !store.profile.name){ if(d.profile && d.profile.name) store.profile = d.profile; }
+    store.rates = Object.assign({}, d.rates||{}, store.rates||{});
+  }
+  if(!store.rates) store.rates={};
+  store.trips.forEach(migrateTrip);
+  save();
+  pendingImport=null;
+  $('importPreview').innerHTML = `<div style="background:#fff;border:1px solid var(--stamp);color:var(--stamp);border-radius:9px;padding:11px;font-size:13px;">
+    Done — ${store.trips.length} trip${store.trips.length===1?'':'s'} now on this device.</div>`;
+  renderTrips(); renderSettings(); buildProfileSelects();
+  if(currentTripId && !store.trips.find(t=>t.id===currentTripId)) currentTripId=null;
+}
+async function wipeData(){
+  if(!await askConfirm('Delete all trips?','Every trip on this device will be removed. Export a backup first if you want to keep them.','Continue')) return;
+  if(!await askConfirm('Last chance','This cannot be undone.','Delete everything')) return;
+  const p=store.profile, r=store.rates;
+  store={trips:[],profile:p,rates:r}; save(); renderTrips(); renderSettings(); toast('All trips deleted');
 }
 
 loadStore();
