@@ -65,6 +65,19 @@
   .mgbtn.dup{background:var(--stamp);}
   .mgbtn.del{background:var(--danger);}
   .managenote{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:var(--ink);opacity:.6;margin-bottom:9px;text-align:center;line-height:1.5;}
+  .wx-place{margin-bottom:14px;}
+  .wx-city{font-family:-apple-system,'Avenir Next',sans-serif;font-weight:700;font-size:14px;margin-bottom:8px;}
+  .wx-sub{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.55;margin:8px 0 6px;}
+  .wx-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;}
+  .wx-row::-webkit-scrollbar{display:none;}
+  .wx-day{flex:0 0 88px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 6px;text-align:center;}
+  .wx-dow{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;font-weight:700;color:var(--stamp);}
+  .wx-dt{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;opacity:.55;margin-top:1px;}
+  .wx-ic{margin:6px 0 4px;display:flex;justify-content:center;}
+  .wx-tmp{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:15px;font-weight:700;}
+  .wx-tmp span{font-size:11px;font-weight:400;opacity:.5;margin-left:4px;}
+  .wx-lb{font-size:10.5px;line-height:1.3;margin-top:3px;min-height:26px;}
+  .wx-meta{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;opacity:.6;margin-top:3px;}
   .warnbox{background:#FFF4E5;border:2px solid var(--danger);border-radius:11px;padding:14px;margin-bottom:14px;}
   .warnbox .wh{display:flex;align-items:center;gap:8px;font-family:-apple-system,'Avenir Next',sans-serif;font-weight:700;font-size:15px;color:var(--danger);margin-bottom:7px;}
   .warnbox p{margin:0 0 7px;font-size:13px;line-height:1.55;}
@@ -206,9 +219,11 @@
   .mapop{
     position:absolute;background:var(--paper);border-radius:9px;padding:10px 12px;
     min-width:150px;max-width:210px;box-shadow:0 4px 18px rgba(0,0,0,.35);
-    transform:translate(-50%,calc(-100% - 14px));z-index:5;pointer-events:auto;
+    transform:translate(-50%,calc(-100% - 14px));z-index:5;pointer-events:auto;--arrow:0%;
   }
-  .mapop::after{content:'';position:absolute;left:50%;bottom:-6px;transform:translateX(-50%) rotate(45deg);width:12px;height:12px;background:var(--paper);}
+  .mapop::after{content:'';position:absolute;left:calc(50% + var(--arrow));bottom:-6px;transform:translateX(-50%) rotate(45deg);width:12px;height:12px;background:var(--paper);}
+  .mapop.below{transform:translate(-50%,14px);}
+  .mapop.below::after{bottom:auto;top:-6px;}
   .mapop .nm{font-family:-apple-system,'Avenir Next','Segoe UI',Roboto,sans-serif;font-weight:700;font-size:14px;line-height:1.25;}
   .mapop .pl{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:10px;color:var(--stamp);margin-top:4px;}
   .mapop .dt{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;margin-top:6px;}
@@ -543,7 +558,12 @@
 
     <div class="panel" id="p_time"><div id="timelineArea"></div></div>
     <div class="panel" id="p_entry"><div id="entryArea"></div></div>
-    <div class="panel" id="p_tips"><div id="tipsArea"></div></div>
+    <div class="panel" id="p_tips">
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--stamp);margin-bottom:9px;">Weather forecast</div>
+      <div id="wxArea"></div>
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--stamp);margin:22px 0 9px;padding-top:16px;border-top:1px solid var(--line);">Briefing</div>
+      <div id="tipsArea"></div>
+    </div>
     <div class="panel" id="p_explore"><div id="exploreArea"></div></div>
     <div class="panel" id="p_nearby"><div id="nearbyArea"></div></div>
     <div class="panel" id="p_chat"><div id="chatArea"></div></div>
@@ -714,7 +734,7 @@ const MAX_TRIPS_PER_YEAR = 12;
 const MW = 1000, MH = 500;
 const DB_KEY = 'tripplanner_offline_v1';
 const KEY_KEY = 'tripplanner_apikey';
-const APP_VERSION = 'v1.17 · 18 Aug 2026 · svg icons';
+const APP_VERSION = 'v1.18 · 18 Aug 2026 · weather + map popup fix';
 let apiKey = '';
 const MAX_STOPS = 5;
 const CATCOLORS = {Travel:'#2F6F62',Accommodation:'#C9A227',Food:'#E8613C',Transport:'#4A7BA6',Activities:'#8A5DA6',Shopping:'#C25E8B',Other:'#7A8699',Flights:'#2F6F62'};
@@ -908,6 +928,7 @@ function migrateTrip(t){
   if(!Array.isArray(t.activities)) t.activities=[];
   if(t.tips===undefined) t.tips=null;
   if(t.entry===undefined) t.entry=null;
+  if(t.weather===undefined) t.weather=null;
   (t.travel||[]).forEach(b=>{ if(!b.cur) b.cur=hc; if(b.code===undefined) b.code=''; });
   (t.stays||[]).forEach(s=>{ if(!s.cur) s.cur=hc; });
   (t.expenses||[]).forEach(e=>{
@@ -1164,7 +1185,7 @@ function createTrip(){
   const t={id:uid(),name:name,locations:finalLocs,
     country:finalLocs[0].country,city:finalLocs[0].city,
     start:$('nt_start').value,end:$('nt_end').value,travellers:num($('nt_travellers').value)||1,
-    notes:'',travel:[],stays:[],expenses:[],activities:[],tips:null,entry:null,chat:[],explorePrefs:{tags:[],other:''},exploreCache:{},nearbyCache:null};
+    notes:'',travel:[],stays:[],expenses:[],activities:[],tips:null,entry:null,weather:null,chat:[],explorePrefs:{tags:[],other:''},exploreCache:{},nearbyCache:null};
   store.trips.push(t);
   ['nt_name','nt_start','nt_end'].forEach(i=>$(i).value='');
   $('nt_travellers').value=1;
@@ -1208,7 +1229,7 @@ function renderTripDetail(){
   $('ed_end').value=t.end||''; $('ed_notes').value=t.notes||'';
   $('ed_travellers').value=t.travellers||1;
   renderLocs('edit');
-  renderSummary(); renderTravel(); renderStays(); renderActivities(); renderBudget(); renderTimeline(); renderEntry(); renderTips(); renderExplore(); renderNearby(); renderChat();
+  renderSummary(); renderTravel(); renderStays(); renderActivities(); renderBudget(); renderTimeline(); renderEntry(); renderWeather(); renderTips(); renderExplore(); renderNearby(); renderChat();
 }
 function editTrip(field,val){
   const t=currentTrip(); if(!t) return;
@@ -1563,10 +1584,121 @@ async function duplicateTrip(id,ev){
   (c.stays||[]).forEach(x=>{ x.id=uid(); x.ref=''; });
   (c.activities||[]).forEach(a=>{ a.id=uid(); });
   (c.expenses||[]).forEach(e=>{ e.id=uid(); });
-  c.exploreCache={}; c.nearbyCache=null; c.tips=null; c.entry=null; c.chat=[];
+  c.exploreCache={}; c.nearbyCache=null; c.tips=null; c.entry=null; c.weather=null; c.chat=[];
   store.trips.push(c);
   save(); renderTrips();
   toast('Copy created — open it to edit');
+}
+
+/* ================= weather forecast ================= */
+/* Open-Meteo: free, no API key, fed by national met services (Met Office for the UK) */
+const WMO={
+ 0:['Clear','sun'],1:['Mainly clear','sun'],2:['Partly cloudy','partly'],3:['Overcast','cloud'],
+ 45:['Fog','fog'],48:['Freezing fog','fog'],
+ 51:['Light drizzle','rain'],53:['Drizzle','rain'],55:['Heavy drizzle','rain'],
+ 56:['Freezing drizzle','sleet'],57:['Freezing drizzle','sleet'],
+ 61:['Light rain','rain'],63:['Rain','rain'],65:['Heavy rain','rain'],
+ 66:['Freezing rain','sleet'],67:['Freezing rain','sleet'],
+ 71:['Light snow','snow'],73:['Snow','snow'],75:['Heavy snow','snow'],77:['Snow grains','snow'],
+ 80:['Rain showers','shower'],81:['Rain showers','shower'],82:['Heavy showers','shower'],
+ 85:['Snow showers','snow'],86:['Snow showers','snow'],
+ 95:['Thunderstorm','storm'],96:['Thunderstorm with hail','storm'],99:['Thunderstorm with hail','storm']
+};
+const WX_ICON={
+ sun:'<svg viewBox="0 0 32 32" width="30" height="30" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round"><circle cx="16" cy="16" r="6" fill="#C9A227" stroke="none"/><path d="M16 3v3M16 26v3M3 16h3M26 16h3M6.8 6.8l2.1 2.1M23.1 23.1l2.1 2.1M25.2 6.8l-2.1 2.1M8.9 23.1l-2.1 2.1"/></svg>',
+ partly:'<svg viewBox="0 0 32 32" width="30" height="30" fill="none"><circle cx="12" cy="12" r="5" fill="#C9A227"/><path d="M23 24H11a5 5 0 0 1 0-10 6.5 6.5 0 0 1 12.5 1.5A4.3 4.3 0 0 1 23 24z" fill="#9BB0C4"/></svg>',
+ cloud:'<svg viewBox="0 0 32 32" width="30" height="30" fill="none"><path d="M23 24H11a5 5 0 0 1 0-10 6.5 6.5 0 0 1 12.5 1.5A4.3 4.3 0 0 1 23 24z" fill="#8fa3b5"/></svg>',
+ rain:'<svg viewBox="0 0 32 32" width="30" height="30" fill="none"><path d="M23 20H11a5 5 0 0 1 0-10 6.5 6.5 0 0 1 12.5 1.5A4.3 4.3 0 0 1 23 20z" fill="#8fa3b5"/><g stroke="#4A7BA6" stroke-width="2" stroke-linecap="round"><path d="M12 23l-1.5 4M18 23l-1.5 4M24 23l-1.5 4"/></g></svg>',
+ shower:'<svg viewBox="0 0 32 32" width="30" height="30" fill="none"><circle cx="11" cy="10" r="4.5" fill="#C9A227"/><path d="M24 20H13a4.5 4.5 0 0 1 0-9 6 6 0 0 1 11.5 1.4A4 4 0 0 1 24 20z" fill="#8fa3b5"/><g stroke="#4A7BA6" stroke-width="2" stroke-linecap="round"><path d="M14 23l-1.5 4M20 23l-1.5 4"/></g></svg>',
+ storm:'<svg viewBox="0 0 32 32" width="30" height="30" fill="none"><path d="M23 19H11a5 5 0 0 1 0-10 6.5 6.5 0 0 1 12.5 1.5A4.3 4.3 0 0 1 23 19z" fill="#6b7f91"/><path d="M17 20l-4 6h3l-1.5 5 5.5-7h-3l2-4z" fill="#C9A227"/></svg>',
+ snow:'<svg viewBox="0 0 32 32" width="30" height="30" fill="none"><path d="M23 19H11a5 5 0 0 1 0-10 6.5 6.5 0 0 1 12.5 1.5A4.3 4.3 0 0 1 23 19z" fill="#8fa3b5"/><g stroke="#7FB0D0" stroke-width="2" stroke-linecap="round"><path d="M12 23v4M12 25h0M18 23v4M24 23v4"/></g></svg>',
+ sleet:'<svg viewBox="0 0 32 32" width="30" height="30" fill="none"><path d="M23 19H11a5 5 0 0 1 0-10 6.5 6.5 0 0 1 12.5 1.5A4.3 4.3 0 0 1 23 19z" fill="#8fa3b5"/><g stroke="#5B8FB0" stroke-width="2" stroke-linecap="round"><path d="M12 23l-1.5 4M18 23v4M24 23l-1.5 4"/></g></svg>',
+ fog:'<svg viewBox="0 0 32 32" width="30" height="30" fill="none" stroke="#9BB0C4" stroke-width="2.5" stroke-linecap="round"><path d="M6 12h20M4 17h24M7 22h18M10 27h12"/></svg>'
+};
+function wxInfo(code){ const w=WMO[code]||['—','cloud']; return {label:w[0],icon:WX_ICON[w[1]]||WX_ICON.cloud}; }
+function bbcSearch(city){ return 'https://www.bbc.co.uk/weather/search?q='+encodeURIComponent(city); }
+
+async function fetchWeather(){
+  const t=currentTrip();
+  const el=$('wxArea'); if(el) el.innerHTML='<div class="loader">Fetching the forecast</div>';
+  const locs=exploreLocs(t);
+  const out=[];
+  try{
+    for(const loc of locs){
+      const city=(loc.city||loc.country||'').replace(/\s*\([^)]*\)/,'').trim();
+      if(!city) continue;
+      const g=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&format=json&name='+encodeURIComponent(city));
+      const gj=await g.json();
+      const hit=(gj.results||[])[0];
+      if(!hit) { out.push({city,error:'Could not find that place'}); continue; }
+      const u=`https://api.open-meteo.com/v1/forecast?latitude=${hit.latitude}&longitude=${hit.longitude}`
+        +`&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max`
+        +`&timezone=auto&forecast_days=16`;
+      const r=await fetch(u);
+      const j=await r.json();
+      const d=j.daily||{};
+      const days=(d.time||[]).map((date,i)=>({
+        date,
+        code:(d.weather_code||[])[i],
+        max:Math.round((d.temperature_2m_max||[])[i]),
+        min:Math.round((d.temperature_2m_min||[])[i]),
+        rain:(d.precipitation_probability_max||[])[i],
+        wind:Math.round((d.wind_speed_10m_max||[])[i])
+      }));
+      out.push({city,label:hit.name+(hit.country?', '+hit.country:''),days});
+    }
+    if(!out.length) throw new Error('NOLOC');
+    t.weather={fetchedAt:new Date().toISOString(),places:out};
+    save(); renderWeather();
+  }catch(e){
+    if(el) el.innerHTML='<div class="err">Could not fetch the forecast. It needs an internet connection — try again when you have signal.</div>'
+      +'<button class="btn btn-brass" onclick="fetchWeather()">Retry</button>';
+  }
+}
+function renderWeather(){
+  const t=currentTrip(); const el=$('wxArea'); if(!el) return;
+  const locs=exploreLocs(t);
+  if(!locs.length){ el.innerHTML='<div class="empty">Add a city on the Plan tab to see its forecast.</div>'; return; }
+  const w=t.weather;
+  if(!w){
+    el.innerHTML=`<div class="empty">See the forecast for ${esc(locs.map(l=>l.city||l.country).join(' and '))} during your trip.</div>
+      <button class="btn btn-brass" onclick="fetchWeather()">Get forecast</button>
+      <div class="notice">Free — no API key and no cost. Needs a connection to fetch, then stays readable offline.</div>`;
+    return;
+  }
+  const when=new Date(w.fetchedAt);
+  const ageH=Math.floor((Date.now()-when.getTime())/3600000);
+  let html=`<div class="tip-meta">Forecast fetched ${esc(when.toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}
+    ${ageH>=24?` — ${Math.floor(ageH/24)} day(s) old, refresh for the latest`:''}</div>`;
+  w.places.forEach(p=>{
+    html+=`<div class="wx-place"><div class="wx-city">${esc(p.label||p.city)}</div>`;
+    if(p.error){ html+=`<div class="notice" style="margin:0">${esc(p.error)}</div></div>`; return; }
+    let days=p.days||[];
+    if(t.start&&t.end) days=days.filter(d=>d.date>=t.start&&d.date<=t.end);
+    if(!days.length){
+      const first=(p.days||[])[0], last=(p.days||[])[(p.days||[]).length-1];
+      html+=`<div class="notice" style="margin:0">No forecast covers your dates yet. Forecasts reach about 16 days ahead${first?` (currently ${esc(first.date)} to ${esc(last.date)})`:''} — check again closer to the time.</div>`;
+      days=(p.days||[]).slice(0,5);
+      if(days.length) html+=`<div class="wx-sub">Next few days instead:</div>`;
+    }
+    html+=`<div class="wx-row">`+days.map(d=>{
+      const i=wxInfo(d.code);
+      const dt=new Date(d.date+'T00:00');
+      return `<div class="wx-day">
+        <div class="wx-dow">${esc(dt.toLocaleDateString('en-GB',{weekday:'short'}))}</div>
+        <div class="wx-dt">${esc(dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'}))}</div>
+        <div class="wx-ic">${i.icon}</div>
+        <div class="wx-tmp">${isNaN(d.max)?'—':d.max+'°'}<span>${isNaN(d.min)?'':d.min+'°'}</span></div>
+        <div class="wx-lb">${esc(i.label)}</div>
+        <div class="wx-meta">${d.rain!=null?'💧 '+d.rain+'%':''}${d.wind?' · '+d.wind+'km/h':''}</div>
+      </div>`;
+    }).join('')+`</div>`;
+    html+=`<a class="pp-link" href="${esc(bbcSearch(p.city))}" target="_blank" rel="noopener">Open ${esc(p.city)} on BBC Weather ↗</a></div>`;
+  });
+  html+=`<button class="btn btn-ghost" onclick="fetchWeather()">Refresh forecast</button>
+    <div class="notice">Data from Open-Meteo, which uses national weather services (the Met Office for the UK — the same source BBC Weather draws on).
+    Forecasts beyond about 5 days are indicative only; check BBC Weather before relying on them.</div>`;
+  el.innerHTML=html;
 }
 
 /* ================= Entry Rules ================= */
@@ -2370,8 +2502,15 @@ function mapPop(id,x,y){
   const label={visited:'Visited',upcoming:'Upcoming',now:'Happening now',planned:'No dates'}[st];
   const pop=document.createElement('div');
   pop.className='mapop';
-  pop.style.left=(x/MW*100)+'%';
-  pop.style.top=(y/MH*100)+'%';
+  const leftPct=Math.min(84,Math.max(16,x/MW*100));
+  const topPct=y/MH*100;
+  const below = topPct < 42;           /* not enough room above — drop it under the marker */
+  pop.style.left=leftPct+'%';
+  pop.style.top=topPct+'%';
+  if(below) pop.classList.add('below');
+  /* keep the arrow pointing at the marker even when the bubble is nudged sideways */
+  const shift=(x/MW*100)-leftPct;
+  pop.style.setProperty('--arrow', Math.max(-40,Math.min(40,shift*3))+'%');
   pop.innerHTML=`<button class="x" onclick="this.parentNode.remove()">✕</button>
     <div class="nm">${esc(t.name||primaryPlace(t)||'Trip')}</div>
     <div class="pl">${esc(locLabel(t))}</div>
