@@ -155,6 +155,10 @@
   .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--stamp);}
   .field textarea{resize:vertical;min-height:52px;}
   .row2{display:flex;gap:8px;} .row2>*{flex:1;min-width:0;}
+  .arrbox{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:10px;margin-bottom:9px;}
+  .arrlbl{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--stamp);margin-bottom:7px;}
+  .arrlbl span{opacity:.5;color:var(--ink);}
+  .arrnote{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:var(--stamp);margin-top:7px;}
   .leg{border-top:1px dashed var(--line);margin-top:6px;padding-top:10px;}
   .leg-label{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--stamp);margin-bottom:7px;}
 
@@ -293,8 +297,8 @@
         <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin-bottom:6px;">Stops — add up to 5</div>
         <div id="ntLocsHost"></div>
         <div class="row2" style="margin-top:4px">
-          <div class="field"><label>Start date</label><input id="nt_start" type="date"></div>
-          <div class="field"><label>End date</label><input id="nt_end" type="date"></div>
+          <div class="field"><label>Start date</label><input id="nt_start" type="date" onchange="ntDates()"></div>
+          <div class="field"><label>End date</label><input id="nt_end" type="date" onchange="ntDates()"></div>
         </div>
         <div class="field"><label>Travellers</label><input id="nt_travellers" type="number" min="1" value="1"></div>
         <button class="btn btn-stamp" onclick="createTrip()">Create trip</button>
@@ -734,7 +738,7 @@ const MAX_TRIPS_PER_YEAR = 12;
 const MW = 1000, MH = 500;
 const DB_KEY = 'tripplanner_offline_v1';
 const KEY_KEY = 'tripplanner_apikey';
-const APP_VERSION = 'v1.19 · 18 Aug 2026 · date fix';
+const APP_VERSION = 'v1.22 · 20 Aug 2026 · arrival times';
 let apiKey = '';
 const MAX_STOPS = 5;
 const CATCOLORS = {Travel:'#2F6F62',Accommodation:'#C9A227',Food:'#E8613C',Transport:'#4A7BA6',Activities:'#8A5DA6',Shopping:'#C25E8B',Other:'#7A8699',Flights:'#2F6F62'};
@@ -929,7 +933,8 @@ function migrateTrip(t){
   if(t.tips===undefined) t.tips=null;
   if(t.entry===undefined) t.entry=null;
   if(t.weather===undefined) t.weather=null;
-  (t.travel||[]).forEach(b=>{ if(!b.cur) b.cur=hc; if(b.code===undefined) b.code=''; });
+  (t.travel||[]).forEach(b=>{ if(!b.cur) b.cur=hc; if(b.code===undefined) b.code='';
+    ['arrDate','arrTime','retArrDate','retArrTime'].forEach(k=>{ if(b[k]===undefined) b[k]=''; }); });
   (t.stays||[]).forEach(s=>{ if(!s.cur) s.cur=hc; });
   (t.expenses||[]).forEach(e=>{
     if(!e.cur) e.cur=hc;
@@ -1175,6 +1180,11 @@ function fmtRange(a,b){
   const f=d=>d?new Date(d+'T00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'?';
   return f(a)+' – '+f(b);
 }
+function ntDates(){
+  const a=$('nt_start'), b=$('nt_end');
+  b.min=a.value||'';
+  if(a.value&&b.value&&b.value<a.value){ b.value=a.value; toast('End date moved to match the start'); }
+}
 function showNewTrip(){ $('newTripForm').style.display='block'; $('newTripBtn').style.display='none'; }
 function hideNewTrip(){ $('newTripForm').style.display='none'; $('newTripBtn').style.display='block'; }
 function createTrip(){
@@ -1227,6 +1237,7 @@ function renderTripDetail(){
   updateTripHeader();
   $('ed_name').value=t.name||''; $('ed_start').value=t.start||'';
   $('ed_end').value=t.end||''; $('ed_notes').value=t.notes||'';
+  $('ed_end').min=t.start||'';
   $('ed_travellers').value=t.travellers||1;
   renderLocs('edit');
   renderSummary(); renderTravel(); renderStays(); renderActivities(); renderBudget(); renderTimeline(); renderEntry(); renderWeather(); renderTips(); renderExplore(); renderNearby(); renderChat();
@@ -1234,6 +1245,12 @@ function renderTripDetail(){
 function editTrip(field,val){
   const t=currentTrip(); if(!t) return;
   t[field]= field==='travellers' ? Math.max(1,num(val)||1) : val;
+  if(field==='start'||field==='end'){
+    const msg=enforceOrder(t,'start','end');
+    if(msg){ $('ed_end').value=t.end||''; toast(msg); }
+    $('ed_end').min=t.start||'';
+    renderTimeline();
+  }
   updateTripHeader();
   save(); renderSummary(); renderBudgetTotals(); renderBudgetBreakdown();
 }
@@ -1259,6 +1276,28 @@ function ymd(d){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 function today(){ return ymd(new Date()); }
+function addDays(dateStr,n){
+  const d=new Date(dateStr+'T00:00'); d.setDate(d.getDate()+n); return ymd(d);
+}
+/* Keep an end from falling before its start.
+   Dates are clamped. Times are NOT — an end time earlier than the start
+   means it runs past midnight, so the end date rolls to the next day. */
+function enforceOrder(o,sd,ed,st,et){
+  let msg='';
+  if(o[sd]&&o[ed]&&o[ed]<o[sd]){ o[ed]=o[sd]; msg='End date moved to match the start'; }
+  if(st&&et&&o[sd]&&o[st]&&o[et]){
+    const overnight=o[et]<o[st];
+    if(overnight && (!o[ed]||o[ed]===o[sd])){
+      o[ed]=addDays(o[sd],1);
+      msg='Ends after midnight, so the end date moved to the next day';
+    } else if(!overnight && o[ed]===addDays(o[sd],1)){
+      /* no longer crosses midnight — undo the automatic roll */
+      o[ed]=o[sd];
+      msg='No longer overnight, so the end date moved back';
+    }
+  }
+  return msg;
+}
 function tripDays(t){
   if(!t.start||!t.end) return 0;
   const d=(new Date(t.end)-new Date(t.start))/86400000;
@@ -1406,9 +1445,12 @@ function renderSummary(){
 
   if((t.travel||[]).length){
     html+=`<div class="sum-block"><h3>Travel</h3>`+t.travel.map(b=>{
+      const arr=(d1,t1)=>(d1&&t1)?` → arrives ${esc(t1)}${d1!==(b.date||b.retDate)?' on '+esc(d1):''}`:'';
       let d=`${esc(b.from||'?')} → ${esc(b.to||'?')}${b.date?' · '+esc(b.date):''}${b.time?' '+esc(b.time):''}`;
+      if(b.arrDate&&b.arrTime) d+=` → arrives ${esc(b.arrTime)}${b.arrDate!==b.date?' on '+esc(b.arrDate):''}`;
       if(b.journey==='Return'){
         d+=`<br>${esc(b.to||'?')} → ${esc(b.from||'?')}${b.retDate?' · '+esc(b.retDate):''}${b.retTime?' '+esc(b.retTime):''}`;
+        if(b.retArrDate&&b.retArrTime) d+=` → arrives ${esc(b.retArrTime)}${b.retArrDate!==b.retDate?' on '+esc(b.retArrDate):''}`;
       }
       if(b.ref) d+='<br>Ref: '+esc(b.ref);
       if(b.retRef) d+=' · Return ref: '+esc(b.retRef);
@@ -1455,15 +1497,37 @@ function renderSummary(){
 /* ================= travel ================= */
 function addTravel(){
   currentTrip().travel.push({id:uid(),mode:'Flight',journey:'Return',carrier:'',ref:'',from:'',to:'',
-    date:'',time:'',retDate:'',retTime:'',retRef:'',code:'',cost:'',cur:homeCur(),notes:''});
+    date:'',time:'',arrDate:'',arrTime:'',retDate:'',retTime:'',retArrDate:'',retArrTime:'',retRef:'',code:'',cost:'',cur:homeCur(),notes:''});
   save(); renderTravel(); renderSummary(); renderBudget();
 }
 function updTravel(id,f,v){
-  const b=currentTrip().travel.find(x=>x.id===id); b[f]=v; save();
+  const b=currentTrip().travel.find(x=>x.id===id); b[f]=v;
+  if(['date','time','arrDate','arrTime'].includes(f)){
+    const m=enforceOrder(b,'date','arrDate','time','arrTime');
+    if(m){ toast(m.replace('End date','Arrival date').replace('the end date','the arrival date')); renderTravel(); }
+  }
+  if(['retDate','retTime','retArrDate','retArrTime'].includes(f)){
+    const m=enforceOrder(b,'retDate','retArrDate','retTime','retArrTime');
+    if(m){ toast(m.replace('End date','Arrival date').replace('the end date','the arrival date')); renderTravel(); }
+  }
+  if(['date','time','retDate','retTime'].includes(f)){
+    const msg=enforceOrder(b,'date','retDate','time','retTime');
+    if(msg){ toast(msg.replace('End date','Return date').replace('the end date','the return date')); renderTravel(); }
+  }
+  save();
   renderSummary(); renderBudgetTotals(); renderBudgetBreakdown(); renderTimeline();
-  if(f==='mode'||f==='journey'||f==='cur'||f==='code') renderTravel();
+  if(f==='mode'||f==='journey'||f==='cur'||f==='code'||f==='date'||f==='time') renderTravel();
 }
 function delTravel(id){ const t=currentTrip(); t.travel=t.travel.filter(x=>x.id!==id); save(); renderTravel(); renderSummary(); renderBudget(); }
+/* journey length shown once both ends are known */
+function legNote(d1,t1,d2,t2){
+  if(!d1||!t1||!d2||!t2) return '';
+  const a=new Date(d1+'T'+t1).getTime(), b=new Date(d2+'T'+t2).getTime();
+  if(isNaN(a)||isNaN(b)||b<=a) return '';
+  const mins=Math.round((b-a)/60000);
+  const overnight = d2!==d1;
+  return `<div class="arrnote">Journey time ${esc(fmtDur(mins))}${overnight?' · arrives the next day':''}</div>`;
+}
 function renderTravel(){
   const t=currentTrip(); const el=$('travelList'); const ppl=travellers(t);
   if(!t.travel.length){ el.innerHTML='<div class="empty">No bookings yet.<br>Add flights, trains or buses.</div>'; return; }
@@ -1506,14 +1570,34 @@ function renderTravel(){
         </div>
         <div class="field"><label>Reservation ref</label><input value="${esc(b.ref)}" placeholder="ABC123" onchange="updTravel('${b.id}','ref',this.value)"></div>
       </div>
+      <div class="arrbox">
+        <div class="arrlbl">Arrival <span>optional</span></div>
+        <div class="row2">
+          <div class="field" style="margin-bottom:0"><label>Arrives date</label>
+            <input type="date" value="${esc(b.arrDate||'')}" min="${esc(b.date||'')}" onchange="updTravel('${b.id}','arrDate',this.value)"></div>
+          <div class="field" style="margin-bottom:0"><label>Arrives time</label>
+            <input type="time" value="${esc(b.arrTime||'')}" onchange="updTravel('${b.id}','arrTime',this.value)"></div>
+        </div>
+        ${legNote(b.date,b.time,b.arrDate,b.arrTime)}
+      </div>
       ${isReturn?`
       <div class="leg">
         <div class="leg-label">Return · ${esc(b.to||'?')} → ${esc(b.from||'?')}</div>
         <div class="row2">
-          <div class="field"><label>Date</label><input type="date" value="${esc(b.retDate)}" onchange="updTravel('${b.id}','retDate',this.value)"></div>
+          <div class="field"><label>Date</label><input type="date" value="${esc(b.retDate)}" min="${esc(b.date||'')}" onchange="updTravel('${b.id}','retDate',this.value)"></div>
           <div class="field"><label>Time</label><input type="time" value="${esc(b.retTime)}" onchange="updTravel('${b.id}','retTime',this.value)"></div>
         </div>
-        <div class="field"><label>Return ref (if different)</label><input value="${esc(b.retRef)}" placeholder="Leave blank if same" onchange="updTravel('${b.id}','retRef',this.value)"></div>
+        <div class="arrbox">
+          <div class="arrlbl">Arrival <span>optional</span></div>
+          <div class="row2">
+            <div class="field" style="margin-bottom:0"><label>Arrives date</label>
+              <input type="date" value="${esc(b.retArrDate||'')}" min="${esc(b.retDate||'')}" onchange="updTravel('${b.id}','retArrDate',this.value)"></div>
+            <div class="field" style="margin-bottom:0"><label>Arrives time</label>
+              <input type="time" value="${esc(b.retArrTime||'')}" onchange="updTravel('${b.id}','retArrTime',this.value)"></div>
+          </div>
+          ${legNote(b.retDate,b.retTime,b.retArrDate,b.retArrTime)}
+        </div>
+        <div class="field" style="margin-top:9px"><label>Return ref (if different)</label><input value="${esc(b.retRef)}" placeholder="Leave blank if same" onchange="updTravel('${b.id}','retRef',this.value)"></div>
       </div>`:''}
       <div class="field" style="margin-top:9px"><label>Notes</label><textarea placeholder="Terminal, seat, baggage" onchange="updTravel('${b.id}','notes',this.value)">${esc(b.notes)}</textarea></div>
       ${trackBtns(trackLinks(b).concat(trackReturnLinks(b)))}
@@ -1527,7 +1611,12 @@ function addStay(){
   save(); renderStays(); renderSummary(); renderBudget(); renderNearby();
 }
 function updStay(id,f,v){
-  const s=currentTrip().stays.find(x=>x.id===id); s[f]=v; save();
+  const s=currentTrip().stays.find(x=>x.id===id); s[f]=v;
+  if(f==='checkin'||f==='checkout'){
+    if(s.checkin&&s.checkout&&s.checkout<s.checkin){ s.checkout=s.checkin; toast('Check-out moved to match check-in'); }
+    renderStays();
+  }
+  save();
   renderSummary(); renderBudgetTotals(); renderBudgetBreakdown(); renderTimeline();
   if(f==='type'||f==='cur') renderStays();
   if(f==='postcode'||f==='name'||f==='address') renderNearby();
@@ -1557,7 +1646,7 @@ function renderStays(){
       ${per}
       <div class="row2">
         <div class="field"><label>Check in</label><input type="date" value="${esc(s.checkin)}" onchange="updStay('${s.id}','checkin',this.value)"></div>
-        <div class="field"><label>Check out</label><input type="date" value="${esc(s.checkout)}" onchange="updStay('${s.id}','checkout',this.value)"></div>
+        <div class="field"><label>Check out</label><input type="date" value="${esc(s.checkout)}" min="${esc(s.checkin||'')}" onchange="updStay('${s.id}','checkout',this.value)"></div>
       </div>
       <div class="row2">
         <div class="field"><label>Check-in time</label><input type="time" value="${esc(s.inTime||'')}" onchange="updStay('${s.id}','inTime',this.value)"></div>
@@ -2104,8 +2193,8 @@ function tripToPrintHTML(t){
       h+=`<div style="border-left:3px solid #2F6F62;padding:5px 0 5px 9px;margin-bottom:7px;font-size:12.5px;">
         <b>${esc(b.mode||'Travel')} · ${esc(b.journey||'One way')}</b>${b.carrier?' — '+esc(b.carrier):''}
         ${b.cost?`<span style="float:right">${esc(money(toHome(b.cost,b.cur)))}</span>`:''}
-        <div style="color:#555;margin-top:2px;">${esc(b.from||'?')} → ${esc(b.to||'?')}${b.date?' · '+esc(b.date):''}${b.time?' '+esc(b.time):''}</div>
-        ${b.journey==='Return'?`<div style="color:#555;">${esc(b.to||'?')} → ${esc(b.from||'?')}${b.retDate?' · '+esc(b.retDate):''}${b.retTime?' '+esc(b.retTime):''}</div>`:''}
+        <div style="color:#555;margin-top:2px;">${esc(b.from||'?')} → ${esc(b.to||'?')}${b.date?' · '+esc(b.date):''}${b.time?' '+esc(b.time):''}${(b.arrDate&&b.arrTime)?' → arrives '+esc(b.arrTime)+(b.arrDate!==b.date?' on '+esc(b.arrDate):''):''}</div>
+        ${b.journey==='Return'?`<div style="color:#555;">${esc(b.to||'?')} → ${esc(b.from||'?')}${b.retDate?' · '+esc(b.retDate):''}${b.retTime?' '+esc(b.retTime):''}${(b.retArrDate&&b.retArrTime)?' → arrives '+esc(b.retArrTime)+(b.retArrDate!==b.retDate?' on '+esc(b.retArrDate):''):''}</div>`:''}
         ${b.ref?`<div style="color:#555;">Ref: ${esc(b.ref)}${b.retRef?' / '+esc(b.retRef):''}</div>`:''}
         ${b.notes?`<div style="color:#555;">${esc(b.notes)}</div>`:''}
       </div>`;
@@ -2225,13 +2314,25 @@ function timelineEvents(t){
     ev.push({date,start,end,kind,title,sub,cost,est});
   };
   (t.travel||[]).forEach(b=>{
-    const label=`${b.mode||'Travel'}: ${b.from||'?'} → ${b.to||'?'}`;
-    const sub=[b.carrier,b.ref?('Ref '+b.ref):''].filter(Boolean).join(' · ');
-    push(b.date,hm(b.time),null,'travel',label,sub,null,false);
+    const sub=[b.carrier,b.code,b.ref?('Ref '+b.ref):''].filter(Boolean).join(' · ');
+    /* outbound */
+    push(b.date,hm(b.time),null,'travel',
+      `${b.mode||'Travel'} departs: ${b.from||'?'} → ${b.to||'?'}`,sub,null,false);
+    if(b.arrDate&&b.arrTime){
+      push(b.arrDate,hm(b.arrTime),null,'travel',
+        `Arrives ${b.to||'destination'}`,
+        [b.carrier,b.code].filter(Boolean).join(' · '),null,false);
+    }
+    /* return */
     if(b.journey==='Return'&&b.retDate){
+      const rsub=[b.carrier,b.code,b.retRef?('Ref '+b.retRef):(b.ref?('Ref '+b.ref):'')].filter(Boolean).join(' · ');
       push(b.retDate,hm(b.retTime),null,'travel',
-        `${b.mode||'Travel'}: ${b.to||'?'} → ${b.from||'?'}`,
-        [b.carrier,b.retRef?('Ref '+b.retRef):(b.ref?('Ref '+b.ref):'')].filter(Boolean).join(' · '),null,false);
+        `${b.mode||'Travel'} departs: ${b.to||'?'} → ${b.from||'?'}`,rsub,null,false);
+      if(b.retArrDate&&b.retArrTime){
+        push(b.retArrDate,hm(b.retArrTime),null,'travel',
+          `Arrives ${b.from||'home'}`,
+          [b.carrier,b.code].filter(Boolean).join(' · '),null,false);
+      }
     }
   });
   (t.stays||[]).forEach(x=>{
@@ -2329,7 +2430,13 @@ function addActivity(from){
   save(); renderActivities(); renderSummary(); renderBudgetTotals(); renderBudgetBreakdown(); renderTimeline();
 }
 function updAct(id,f,v){
-  const a=currentTrip().activities.find(x=>x.id===id); a[f]=v; save();
+  const a=currentTrip().activities.find(x=>x.id===id); a[f]=v;
+  if(['start','end','startTime','endTime'].includes(f)){
+    const msg=enforceOrder(a,'start','end','startTime','endTime');
+    if(msg) toast(msg);
+    renderActivities();
+  }
+  save();
   renderSummary(); renderBudgetTotals(); renderBudgetBreakdown(); renderTimeline();
   if(f==='cat'||f==='cur'||f==='startTime'||f==='endTime') renderActivities();
 }
@@ -2366,12 +2473,14 @@ function renderActivities(){
       </select></div>
       <div class="row2">
         <div class="field"><label>Start date</label><input type="date" value="${esc(a.start)}" onchange="updAct('${a.id}','start',this.value)"></div>
-        <div class="field"><label>End date</label><input type="date" value="${esc(a.end)}" onchange="updAct('${a.id}','end',this.value)"></div>
+        <div class="field"><label>End date</label><input type="date" value="${esc(a.end)}" min="${esc(a.start||'')}" onchange="updAct('${a.id}','end',this.value)"></div>
       </div>
       <div class="row2">
         <div class="field"><label>Start time <span style="opacity:.6">(optional)</span></label><input type="time" value="${esc(a.startTime)}" onchange="updAct('${a.id}','startTime',this.value)"></div>
         <div class="field"><label>End time <span style="opacity:.6">(optional)</span></label><input type="time" value="${esc(a.endTime)}" onchange="updAct('${a.id}','endTime',this.value)"></div>
       </div>
+      ${(a.start&&a.end&&a.end===addDays(a.start,1)&&a.startTime&&a.endTime&&a.endTime<a.startTime)
+        ?`<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:var(--stamp);margin:-4px 0 9px;">Runs overnight — ends ${esc(a.endTime)} the next day.</div>`:''}
       ${(a.startTime&&!a.endTime)?`<div class="field"><label>Roughly how long?</label>
         <select onchange="updAct('${a.id}','dur',this.value)">
           ${DURATIONS.map(d=>`<option value="${d[0]}" ${String(a.dur)===d[0]?'selected':''}>${d[1]}</option>`).join('')}
@@ -2393,7 +2502,12 @@ function addExpense(){
   save(); renderBudget(); renderSummary();
 }
 function updExp(id,f,v){
-  const e=currentTrip().expenses.find(x=>x.id===id); e[f]=v; save();
+  const e=currentTrip().expenses.find(x=>x.id===id); e[f]=v;
+  if(f==='start'||f==='end'){
+    if(e.start&&e.end&&e.end<e.start){ e.end=e.start; toast('End date moved to match the start'); }
+    renderBudget();
+  }
+  save();
   if(f==='amount'||f==='cur'||f==='start'||f==='end'){ renderBudgetTotals(); renderBudgetBreakdown(); renderSummary(); }
   if(f==='cur') renderBudget();
 }
@@ -2436,7 +2550,7 @@ function renderBudget(){
         </select></div>
         <div class="field"><label>Start date</label><input type="date" value="${esc(e.start||'')}" onchange="updExp('${e.id}','start',this.value)"></div>
       </div>
-      <div class="field"><label>End date</label><input type="date" value="${esc(e.end||'')}" onchange="updExp('${e.id}','end',this.value)"></div>
+      <div class="field"><label>End date</label><input type="date" value="${esc(e.end||'')}" min="${esc(e.start||'')}" onchange="updExp('${e.id}','end',this.value)"></div>
       <div class="field"><label>Description</label><input type="text" placeholder="e.g. dinner at the harbour" value="${esc(e.label)}" onchange="updExp('${e.id}','label',this.value)"></div>
       <div class="row2">
         <div class="field"><label>Cost</label><input type="number" placeholder="0" value="${esc(e.amount)}" oninput="updExp('${e.id}','amount',this.value)"></div>
